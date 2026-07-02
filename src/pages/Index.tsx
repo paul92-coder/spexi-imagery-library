@@ -8,7 +8,7 @@ import { type MediaItem, type UseCase } from "@/data/gallery-data";
 import { useMediaOverrides } from "@/hooks/useMediaOverrides";
 import { cn } from "@/lib/utils";
 import droneBg from "@/assets/drone-bg.jpg";
-import heroVideo from "@/assets/hero-video.mp4";
+import { HERO_VIDEO_URL } from "@/data/media-cdn";
 import { NianticLogo, EsriLogo, SkywatchLogo } from "@/components/PartnerLogos";
 
 const INDUSTRIES = [
@@ -137,7 +137,7 @@ const Index = () => {
         {/* Hero */}
         <section className="relative -mx-4 sm:-mx-6">
           <video
-            src={heroVideo}
+            src={HERO_VIDEO_URL}
             autoPlay
             loop
             muted
