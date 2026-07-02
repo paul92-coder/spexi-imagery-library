@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { Link, useParams, Navigate, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Layers, Zap, Globe2, Sparkles, Box, Map as MapIcon, Compass, MapPin, Code2, Workflow, ChevronDown } from "lucide-react";
 import Header from "@/components/Header";
 import Thumbnail from "@/components/Thumbnail";
@@ -89,9 +89,28 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
   const { useCases: allUseCases, loading } = useMediaOverrides();
   const navigate = useNavigate();
   const location = useLocation();
-  const [folder, setFolder] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const folder = searchParams.get("folder");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const prevFolderRef = useRef<string | null>(null);
+
+  // Folder drill-in is reflected in the URL (?folder=) and pushed onto
+  // browser history, so the back button steps back out of a folder instead
+  // of leaving the page entirely.
+  const openFolder = (name: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("folder", name);
+      return next;
+    });
+  };
+  const closeFolder = () => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("folder");
+      return next;
+    }, { replace: true });
+  };
 
   const scrollToSectionTop = (id: string, offset = 88) => {
     requestAnimationFrame(() => {
@@ -196,7 +215,7 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
 
         {folder ? (
           <button
-            onClick={() => { setFolder(null); setLightboxIndex(null); }}
+            onClick={() => { closeFolder(); setLightboxIndex(null); }}
             className="mt-16 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft size={16} />
@@ -217,7 +236,7 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
           <h2 className="font-heading text-2xl font-semibold text-foreground">
             {folder ? (
               <>
-                <button onClick={() => { setFolder(null); setLightboxIndex(null); }} className="text-muted-foreground hover:text-foreground">
+                <button onClick={() => { closeFolder(); setLightboxIndex(null); }} className="text-muted-foreground hover:text-foreground">
                   {type === "api" ? "All locations" : "All use cases"}
                 </button>
                 <span className="text-muted-foreground"> / </span>
@@ -248,7 +267,7 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
                     key={f.name}
                     onClick={() => {
                       if (type === "api") navigate(`/api-view/${encodeURIComponent(f.name)}`);
-                      else { setFolder(f.name); setLightboxIndex(null); }
+                      else { openFolder(f.name); setLightboxIndex(null); }
                     }}
                     className="group block animate-fade-in text-left opacity-0 transition-all hover:-translate-y-1"
                     style={{ animationDelay: `${i * 60}ms` }}

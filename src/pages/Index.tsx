@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, useSearchParams, Link } from "react-router-dom";
 import { Box, Map as MapIcon, Globe2, Compass, ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
 import LightboxViewer from "@/components/LightboxViewer";
@@ -44,15 +44,34 @@ type Entry = { item: MediaItem; useCase: UseCase };
 const Index = () => {
   const { useCases: allUseCases, loading } = useMediaOverrides();
   const [industry, setIndustry] = useState<Industry>("All");
-  const [activeGroup, setActiveGroup] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeGroup = searchParams.get("group");
   const [lightboxItems, setLightboxItems] = useState<MediaItem[] | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const location = useLocation();
 
+  // Folder drill-in is reflected in the URL (?group=) and pushed onto browser
+  // history, so the back button steps back out of a folder instead of
+  // leaving the page entirely.
+  const openGroup = (id: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("group", id);
+      return next;
+    });
+  };
+  const closeGroup = () => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("group");
+      return next;
+    }, { replace: true });
+  };
+
   useEffect(() => {
     const reset = () => {
       setIndustry("All");
-      setActiveGroup(null);
+      closeGroup();
       setLightboxItems(null);
       setLightboxIndex(null);
     };
@@ -231,7 +250,7 @@ const Index = () => {
             return (
               <button
                 key={ind}
-                onClick={() => { setIndustry(ind); setActiveGroup(null); setLightboxItems(null); setLightboxIndex(null); }}
+                onClick={() => { setIndustry(ind); closeGroup(); setLightboxItems(null); setLightboxIndex(null); }}
                 className={cn(
                   "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
                   active
@@ -247,7 +266,7 @@ const Index = () => {
 
         {activeTile && (
           <button
-            onClick={() => { setActiveGroup(null); setLightboxItems(null); setLightboxIndex(null); }}
+            onClick={() => { closeGroup(); setLightboxItems(null); setLightboxIndex(null); }}
             className="mt-10 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft size={16} />
@@ -296,7 +315,7 @@ const Index = () => {
             {topTiles.map((tile, i) => (
               <button
                 key={tile.id}
-                onClick={() => { setActiveGroup(tile.id); setLightboxIndex(null); setLightboxItems(null); }}
+                onClick={() => { openGroup(tile.id); setLightboxIndex(null); setLightboxItems(null); }}
                 className="group block animate-fade-in text-left opacity-0 transition-all duration-500 ease-out hover:-translate-y-1"
                 style={{ animationDelay: `${i * 50}ms` }}
               >
