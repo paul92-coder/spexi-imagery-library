@@ -6,9 +6,9 @@ import LightboxViewer from "@/components/LightboxViewer";
 import Thumbnail from "@/components/Thumbnail";
 import { type MediaItem, type UseCase } from "@/data/gallery-data";
 import { useMediaOverrides } from "@/hooks/useMediaOverrides";
-import { HERO_VIDEO_URL } from "@/data/media-cdn";
 import { cn } from "@/lib/utils";
 import droneBg from "@/assets/drone-bg.jpg";
+import heroVideo from "@/assets/hero-video.mp4";
 import { NianticLogo, EsriLogo, SkywatchLogo } from "@/components/PartnerLogos";
 
 const INDUSTRIES = [
@@ -32,6 +32,12 @@ const PRODUCT_TYPES = [
 ];
 
 const BEFORE_AFTER_GROUP = "before-after";
+
+// Before/after items normally get pulled into the cross-use-case "Before &
+// After" shelf below. Anything listed here stays in its own use case's
+// folder instead — e.g. the wildfire comparison stays under "Catastrophe"
+// alongside the flooding photos rather than moving to the shelf.
+const BEFORE_AFTER_KEEP_IN_USE_CASE = new Set(["cat-3"]);
 
 type Entry = { item: MediaItem; useCase: UseCase };
 
@@ -82,7 +88,10 @@ const Index = () => {
   // how the original site surfaces them as a single "Before & After" shelf
   // regardless of which use case they came from.
   const beforeAfterEntries = useMemo(
-    () => filteredEntries.filter((e) => e.item.type === "before_after"),
+    () =>
+      filteredEntries.filter(
+        (e) => e.item.type === "before_after" && !BEFORE_AFTER_KEEP_IN_USE_CASE.has(e.item.id),
+      ),
     [filteredEntries],
   );
 
@@ -90,7 +99,11 @@ const Index = () => {
     return allUseCases
       .map((uc) => ({
         useCase: uc,
-        entries: filteredEntries.filter((e) => e.useCase.id === uc.id && e.item.type !== "before_after"),
+        entries: filteredEntries.filter(
+          (e) =>
+            e.useCase.id === uc.id &&
+            (e.item.type !== "before_after" || BEFORE_AFTER_KEEP_IN_USE_CASE.has(e.item.id)),
+        ),
       }))
       .filter((g) => g.entries.length > 0);
   }, [filteredEntries, allUseCases]);
@@ -124,7 +137,7 @@ const Index = () => {
         {/* Hero */}
         <section className="relative -mx-4 sm:-mx-6">
           <video
-            src={HERO_VIDEO_URL}
+            src={heroVideo}
             autoPlay
             loop
             muted
@@ -147,7 +160,7 @@ const Index = () => {
                 panoramas, 5-View API responses, and Gaussian splats — ready to drop into any spatial workflow.
               </p>
             </div>
-            <a
+            
               href="https://spexi.com"
               target="_blank"
               rel="noopener noreferrer"
@@ -306,7 +319,7 @@ const Index = () => {
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
             Get standardized captures from our verified pilot network and drop them straight into your spatial workflow.
           </p>
-          <a
+          
             href="https://spexi.com"
             target="_blank"
             rel="noopener noreferrer"
