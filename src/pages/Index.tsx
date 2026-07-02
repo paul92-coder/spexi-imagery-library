@@ -161,7 +161,7 @@ const Index = () => {
               </p>
             </div>
             
-              href="https://spexi.com"
+              <a href="https://spexi.com"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-8 inline-flex items-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-105"
@@ -320,7 +320,7 @@ const Index = () => {
             Get standardized captures from our verified pilot network and drop them straight into your spatial workflow.
           </p>
           
-            href="https://spexi.com"
+            <a href="https://spexi.com"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-8 inline-flex items-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-105"
