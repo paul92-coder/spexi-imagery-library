@@ -38,7 +38,7 @@ import orthoThumb from "@/assets/ortho-thumb.jpg";
 import orthoThumbVideo from "@/assets/ortho-thumb.mp4";
 
 export type MediaType = "image" | "video" | "before_after" | "orthomosaic_map" | "splat_embed" | "image_carousel";
-export type ImageType = "orthomosaic" | "oblique" | "splat";
+export type ImageType = "orthomosaic" | "oblique" | "splat" | "api";
 
 export interface MediaItem {
   id: string;

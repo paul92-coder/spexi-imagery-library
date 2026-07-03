@@ -107,7 +107,9 @@ export const MediaOverridesProvider = ({ children }: { children: ReactNode }) =>
               ? "splat"
               : it === "Orthomosaic" || it === "Orthomosiac"
                 ? "orthomosaic"
-                : "oblique";
+                : it === "5-View API"
+                  ? "api"
+                  : "oblique";
           return {
             id: `upload-${u.id}`,
             type: u.media_type,

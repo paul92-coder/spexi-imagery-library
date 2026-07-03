@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams, Navigate, useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useParams, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Layers, Zap, Globe2, Sparkles, Box, Map as MapIcon, Compass, MapPin, Code2, Workflow, ChevronDown } from "lucide-react";
 import Header from "@/components/Header";
 import Thumbnail from "@/components/Thumbnail";
@@ -10,6 +10,15 @@ import { PANORAMA_HERO_VIDEO_URL } from "@/data/media-cdn";
 import { cn } from "@/lib/utils";
 
 type ProductType = "splat" | "ortho" | "panorama" | "api";
+
+const DIRECTION_LABELS: Record<string, string> = {
+  north: "North",
+  east: "East",
+  south: "South",
+  west: "West",
+  above: "Above",
+};
+const getDirection = (item: MediaItem) => item.tags?.find((t) => t in DIRECTION_LABELS);
 
 interface ProductConfig {
   badge: string;
@@ -75,7 +84,7 @@ const PRODUCTS: Record<ProductType, ProductConfig> = {
       { title: "Drop-in workflow", body: "Plug straight into existing pipelines.", icon: <Workflow size={14} /> },
       { title: "Portfolio-ready", body: "Batch coordinates for entire books of business.", icon: <Layers size={14} /> },
     ],
-    match: () => false, // 5-view captures are admin-uploaded per location in production; none are seeded here.
+    match: (i) => i.imageType === "api",
   },
 };
 
@@ -87,7 +96,6 @@ const ProductTypePage = () => {
 
 const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductConfig }) => {
   const { useCases: allUseCases, loading } = useMediaOverrides();
-  const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const folder = searchParams.get("folder");
@@ -265,10 +273,7 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
                 return (
                   <button
                     key={f.name}
-                    onClick={() => {
-                      if (type === "api") navigate(`/api-view/${encodeURIComponent(f.name)}`);
-                      else { openFolder(f.name); setLightboxIndex(null); }
-                    }}
+                    onClick={() => { openFolder(f.name); setLightboxIndex(null); }}
                     className="group block animate-fade-in text-left opacity-0 transition-all hover:-translate-y-1"
                     style={{ animationDelay: `${i * 60}ms` }}
                   >
@@ -300,7 +305,16 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
                 <div className="aspect-[4/3] overflow-hidden rounded-xl bg-muted ring-1 ring-border transition-all group-hover:ring-foreground/30">
                   <Thumbnail item={item} priority={i === 0} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 </div>
-                {item.title && <div className="mt-3 px-1 text-sm font-medium text-foreground">{item.title}</div>}
+                {item.title && (
+                  <div className="mt-3 px-1 text-sm font-medium text-foreground">
+                    {item.title}
+                    {type === "api" && getDirection(item) && (
+                      <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                        · {DIRECTION_LABELS[getDirection(item)!]}
+                      </span>
+                    )}
+                  </div>
+                )}
               </button>
             ))}
           </div>
