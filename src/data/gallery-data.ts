@@ -360,6 +360,13 @@ export const useCases: UseCase[] = [
       },
     ],
   },
+  {
+    id: "bridge-inspection",
+    title: "Bridge Inspection",
+    subtitle: "Structural condition monitoring from above",
+    coverImage: constructionSite1Img,
+    items: [],
+  },
   // The following are placeholder folders with no seeded imagery yet — kept
   // empty until real captures exist. Index.tsx already hides any use case
   // with zero matching entries, so these stay off the home page until items

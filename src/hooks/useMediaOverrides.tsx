@@ -37,6 +37,50 @@ interface OverridesContextValue {
 
 const OverridesContext = createContext<OverridesContextValue | null>(null);
 
+const DIRECTION_ORDER = ["north", "east", "south", "west", "above"];
+const getDirection = (item: MediaItem) => item.tags?.find((t) => DIRECTION_ORDER.includes(t));
+
+// 5-View API captures are uploaded as separate same-titled rows, one per
+// direction. Bundle any that share a title into a single image_carousel
+// item so they're browsed together (N/E/S/W/Above) wherever this folder's
+// items are displayed — not just on the dedicated 5-View API product page —
+// even standalone items with no siblings are left as plain images.
+function groupApiViews(items: MediaItem[]): MediaItem[] {
+  const groups = new Map<string, MediaItem[]>();
+  const passthrough: MediaItem[] = [];
+  for (const item of items) {
+    if (item.imageType === "api" && item.title) {
+      if (!groups.has(item.title)) groups.set(item.title, []);
+      groups.get(item.title)!.push(item);
+    } else {
+      passthrough.push(item);
+    }
+  }
+  const grouped: MediaItem[] = [];
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      grouped.push(group[0]);
+      continue;
+    }
+    const sorted = [...group].sort((a, b) => {
+      const ai = DIRECTION_ORDER.indexOf(getDirection(a) ?? "");
+      const bi = DIRECTION_ORDER.indexOf(getDirection(b) ?? "");
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
+    const cover = sorted.find((it) => getDirection(it) === "above") ?? sorted[0];
+    grouped.push({
+      ...cover,
+      id: `api-group-${cover.title.toLowerCase().replace(/\s+/g, "-")}`,
+      type: "image_carousel",
+      images: sorted.map((it) => {
+        const dir = getDirection(it);
+        return { src: it.src ?? it.thumbnail, title: dir ? dir[0].toUpperCase() + dir.slice(1) : it.title };
+      }),
+    });
+  }
+  return [...passthrough, ...grouped];
+}
+
 function applyOverride(item: MediaItem, ov?: MediaOverride): MediaItem {
   if (!ov) return item;
   return {
@@ -144,10 +188,10 @@ export const MediaOverridesProvider = ({ children }: { children: ReactNode }) =>
     }
     return baseUseCases.map((uc) => ({
       ...uc,
-      items: [
+      items: groupApiViews([
         ...uc.items.map((it) => applyOverride(it, overrides[it.id])),
         ...(byUseCase[uc.id] ?? []),
-      ],
+      ]),
     }));
   }, [overrides, uploadItems, uploads]);
 

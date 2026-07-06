@@ -22,6 +22,7 @@ interface Row {
   industry: string;
   imageryType: string;
   useCase: string;
+  folderId: string;
   thumbnail: string;
   dirty: boolean;
   saving: boolean;
@@ -50,6 +51,11 @@ const IMAGERY_TYPE_OPTIONS = [
 ];
 
 const DIRECTION_TAGS = ["north", "east", "south", "west", "above"] as const;
+
+// The home-page folder an item lives in — distinct from the free-text
+// "Use case" tag below, which is just a purpose label (e.g. "Progress
+// tracking") and doesn't affect where an item is displayed.
+const FOLDER_OPTIONS = baseUseCases.map((uc) => ({ id: uc.id, title: uc.title }));
 
 type FolderId = "splat" | "ortho" | "panorama" | "api" | "other";
 const FOLDERS: { id: FolderId; label: string; match: (r: Row) => boolean }[] = [
@@ -93,6 +99,7 @@ const Admin = () => {
 
   // Upload form state
   const [upFiles, setUpFiles] = useState<File[]>([]);
+  const [upFolder, setUpFolder] = useState<string>("uploads");
   const [upUseCase, setUpUseCase] = useState<string>(USE_CASE_OPTIONS[0]);
   const [upIndustry, setUpIndustry] = useState<string>("Other");
   const [upImageryType, setUpImageryType] = useState<string>("Oblique");
@@ -120,6 +127,7 @@ const Admin = () => {
           industry: ov?.industry ?? "",
           imageryType: ov?.imagery_type ?? "",
           useCase: ov?.use_case ?? "",
+          folderId: uc.id,
           thumbnail: item.thumbnail,
           dirty: false,
           saving: false,
@@ -136,6 +144,7 @@ const Admin = () => {
         industry: u.industry ?? "",
         imageryType: u.imagery_type ?? "",
         useCase: u.use_case ?? "",
+        folderId: u.use_case_id,
         thumbnail: u.media_type === "video" ? "" : (signedUrls[u.storage_path] ?? ""),
         dirty: false,
         saving: false,
@@ -245,6 +254,19 @@ const Admin = () => {
     await refresh();
   };
 
+  // Immediately persist which home-page folder an upload lives in.
+  const setFolder = async (row: Row, folderId: string) => {
+    if (!row.isUpload || !row.uploadId) return;
+    setRows((rs) => rs.map((r) => (r.mediaId === row.mediaId ? { ...r, folderId, saving: true } : r)));
+    const { error } = await supabase.from("media_uploads").update({ use_case_id: folderId }).eq("id", row.uploadId);
+    if (error) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+      setRows((rs) => rs.map((r) => (r.mediaId === row.mediaId ? { ...r, saving: false } : r)));
+      return;
+    }
+    await refresh();
+  };
+
   const saveRow = async (id: string, overrides?: Partial<Row>) => {
     const base = rows.find((r) => r.mediaId === id);
     if (!base) return;
@@ -319,7 +341,7 @@ const Admin = () => {
         if (upErr) throw upErr;
         const fileTags = upFileTags[i] || [];
         const { error: insErr } = await supabase.from("media_uploads").insert({
-          use_case_id: "uploads",
+          use_case_id: upFolder,
           use_case: upUseCase,
           media_type: isVideo ? "video" : "image",
           storage_path: path,
@@ -340,6 +362,7 @@ const Admin = () => {
       setUpTags("");
       setUpIndustry("Other");
       setUpImageryType("Oblique");
+      setUpFolder("uploads");
       setUpUseCase(USE_CASE_OPTIONS[0]);
       setUploadProgress("");
       await refresh();
@@ -395,6 +418,16 @@ const Admin = () => {
                   onChange={(e) => setUpFiles(Array.from(e.target.files ?? []))}
                   className="text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-primary-foreground"
                 />
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Folder</label>
+                  <select
+                    value={upFolder}
+                    onChange={(e) => setUpFolder(e.target.value)}
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    {FOLDER_OPTIONS.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1">Use case</label>
                   <select
@@ -608,6 +641,17 @@ const Admin = () => {
                         {IMAGERY_TYPE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
                       </select>
                     </div>
+                    {r.isUpload && (
+                      <div>
+                        <select
+                          value={r.folderId}
+                          onChange={(e) => setFolder(r, e.target.value)}
+                          className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
+                        >
+                          {FOLDER_OPTIONS.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
+                        </select>
+                      </div>
+                    )}
                     <div>
                       <select
                         value={r.useCase}
