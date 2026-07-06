@@ -33,10 +33,10 @@ const PRODUCT_TYPES = [
 
 const BEFORE_AFTER_GROUP = "before-after";
 
-// Before/after items normally get pulled into the cross-use-case "Before &
-// After" shelf below. Anything listed here stays in its own use case's
-// folder instead — e.g. the wildfire comparison stays under "Catastrophe"
-// alongside the flooding photos rather than moving to the shelf.
+// Before/after items normally get pulled out of their own use case and into
+// the cross-use-case "Before & After" shelf below, appearing there only.
+// Anything listed here also stays in its own use case's folder — e.g. the
+// wildfire comparison shows both under "Catastrophe" and in the shelf.
 const BEFORE_AFTER_KEEP_IN_USE_CASE = new Set(["cat-3"]);
 
 type Entry = { item: MediaItem; useCase: UseCase };
@@ -107,10 +107,7 @@ const Index = () => {
   // how the original site surfaces them as a single "Before & After" shelf
   // regardless of which use case they came from.
   const beforeAfterEntries = useMemo(
-    () =>
-      filteredEntries.filter(
-        (e) => e.item.type === "before_after" && !BEFORE_AFTER_KEEP_IN_USE_CASE.has(e.item.id),
-      ),
+    () => filteredEntries.filter((e) => e.item.type === "before_after"),
     [filteredEntries],
   );
 
