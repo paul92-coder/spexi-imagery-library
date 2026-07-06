@@ -124,7 +124,7 @@ const Index = () => {
             (e.item.type !== "before_after" || BEFORE_AFTER_KEEP_IN_USE_CASE.has(e.item.id)),
         ),
       }))
-      .filter((g) => g.entries.length > 0);
+      .filter((g) => g.entries.length > 0 && g.useCase.id !== "uploads");
   }, [filteredEntries, allUseCases]);
 
   const topTiles = useMemo(() => {
