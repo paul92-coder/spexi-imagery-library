@@ -20,7 +20,6 @@ const INDUSTRIES = [
   "Finance",
   "Commercial Real Estate",
   "Spatial / Physical AI",
-  "Other",
 ] as const;
 type Industry = (typeof INDUSTRIES)[number];
 
