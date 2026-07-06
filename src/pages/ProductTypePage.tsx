@@ -20,6 +20,23 @@ const DIRECTION_LABELS: Record<string, string> = {
 };
 const getDirection = (item: MediaItem) => item.tags?.find((t) => t in DIRECTION_LABELS);
 
+// Picks the location (grouped by title) with the most direction-tagged
+// images, so the hero sample grid shows a real, consistent 5-view set
+// once one exists, instead of mixing images from different locations.
+const pickHeroLocation = (entries: { item: MediaItem; useCase: UseCase }[]) => {
+  const groups = new Map<string, MediaItem[]>();
+  for (const { item } of entries) {
+    const key = item.title || "Untitled location";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(item);
+  }
+  let best: MediaItem[] = [];
+  for (const items of groups.values()) {
+    if (items.length > best.length) best = items;
+  }
+  return best;
+};
+
 interface ProductConfig {
   badge: string;
   title: string;
@@ -353,22 +370,30 @@ const INDUSTRIES_LIST = [
 ];
 
 function ApiSampleGrid({ entries }: { entries: { item: MediaItem; useCase: UseCase }[] }) {
+  const heroItems = useMemo(() => pickHeroLocation(entries), [entries]);
+  const byDirection: Partial<Record<string, MediaItem>> = {};
+  for (const item of heroItems) {
+    const dir = getDirection(item);
+    if (dir && !byDirection[dir]) byDirection[dir] = item;
+  }
+  const hasAny = Object.keys(byDirection).length > 0;
+
   return (
     <div className="relative mt-8 lg:mt-0">
       <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-primary/15 via-transparent to-primary/5 blur-2xl" />
       <div className="relative rounded-2xl border border-border bg-card/40 p-4 backdrop-blur-sm sm:p-5">
         <div className="grid grid-cols-3 grid-rows-3 gap-2 sm:gap-3" style={{ aspectRatio: "1/1" }}>
           <div />
-          <SampleTile label="North" />
+          <SampleTile label="North" item={byDirection.north} />
           <div />
-          <SampleTile label="West" />
-          <SampleTile label="Above" highlight />
-          <SampleTile label="East" />
+          <SampleTile label="West" item={byDirection.west} />
+          <SampleTile label="Above" item={byDirection.above} highlight />
+          <SampleTile label="East" item={byDirection.east} />
           <div />
-          <SampleTile label="South" />
+          <SampleTile label="South" item={byDirection.south} />
           <div />
         </div>
-        {entries.length === 0 && (
+        {!hasAny && (
           <p className="mt-4 text-center text-xs text-muted-foreground">
             Sample tiles shown — live captures populate this grid once a location has been requested.
           </p>
@@ -463,10 +488,14 @@ function HeroShowcase({ entries, type }: { entries: { item: MediaItem; useCase: 
   );
 }
 
-function SampleTile({ label, highlight }: { label: string; highlight?: boolean }) {
+function SampleTile({ label, item, highlight }: { label: string; item?: MediaItem; highlight?: boolean }) {
   return (
     <div className={cn("relative overflow-hidden rounded-md bg-muted ring-1 ring-border aspect-square", highlight && "ring-primary/50")}>
-      <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">No {label.toLowerCase()}</div>
+      {item ? (
+        <Thumbnail item={item} className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">No {label.toLowerCase()}</div>
+      )}
       <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary-foreground shadow-md">
         {label}
       </span>
