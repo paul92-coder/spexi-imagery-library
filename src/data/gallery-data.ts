@@ -360,6 +360,52 @@ export const useCases: UseCase[] = [
       },
     ],
   },
+  // The following are placeholder folders with no seeded imagery yet — kept
+  // empty until real captures exist. Index.tsx already hides any use case
+  // with zero matching entries, so these stay off the home page until items
+  // are added here.
+  {
+    id: "finance-loan-verification",
+    title: "Construction Loan Draw Verification",
+    subtitle: "Milestone imagery for lender fund releases",
+    coverImage: constructionSite1Img,
+    items: [],
+  },
+  {
+    id: "finance-portfolio-surveillance",
+    title: "Institutional Real Estate Portfolio Surveillance",
+    subtitle: "Condition monitoring across property portfolios",
+    coverImage: constructionSite1Img,
+    items: [],
+  },
+  {
+    id: "finance-project-due-diligence",
+    title: "Renewable Project Finance Due Diligence",
+    subtitle: "Progress verification for project-financed renewables",
+    coverImage: constructionSite1Img,
+    items: [],
+  },
+  {
+    id: "utilities-corridor-inspection",
+    title: "Transmission & Distribution Corridor Inspection",
+    subtitle: "Vegetation encroachment & right-of-way monitoring",
+    coverImage: constructionSite1Img,
+    items: [],
+  },
+  {
+    id: "utilities-renewable-assets",
+    title: "Wind & Solar Farm Asset Monitoring",
+    subtitle: "Utility-scale generation site inspection",
+    coverImage: constructionSite1Img,
+    items: [],
+  },
+  {
+    id: "utilities-storm-response",
+    title: "Storm Damage & Outage Assessment",
+    subtitle: "Rapid post-storm imagery for restoration crews",
+    coverImage: constructionSite1Img,
+    items: [],
+  },
   {
     // Admin uploads (via /admin) land here by default — see useMediaOverrides,
     // which slots media_uploads rows into whichever base use case's `id`
