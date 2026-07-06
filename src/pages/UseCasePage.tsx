@@ -61,10 +61,6 @@ const UseCasePage = () => {
     setLightboxIndex(null);
     navigate(`/use-case/${useCase.id}`, { replace: true });
   };
-  const navigateLightbox = (index: number) => {
-    setLightboxIndex(index);
-    navigate(`/use-case/${useCase.id}/${useCase.items[index].id}`, { replace: true });
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -117,7 +113,6 @@ const UseCasePage = () => {
           currentIndex={lightboxIndex}
           useCaseId={useCase.id}
           onClose={closeLightbox}
-          onNavigate={navigateLightbox}
         />
       )}
     </div>

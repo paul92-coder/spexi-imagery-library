@@ -9,10 +9,9 @@ interface LightboxViewerProps {
   currentIndex: number;
   useCaseId: string;
   onClose: () => void;
-  onNavigate: (index: number) => void;
 }
 
-const LightboxViewer = ({ items, currentIndex, useCaseId, onClose, onNavigate }: LightboxViewerProps) => {
+const LightboxViewer = ({ items, currentIndex, useCaseId, onClose }: LightboxViewerProps) => {
   const item = items[currentIndex];
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -33,12 +32,10 @@ const LightboxViewer = ({ items, currentIndex, useCaseId, onClose, onNavigate }:
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft" && currentIndex > 0) onNavigate(currentIndex - 1);
-      if (e.key === "ArrowRight" && currentIndex < items.length - 1) onNavigate(currentIndex + 1);
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [currentIndex, items.length, onClose, onNavigate]);
+  }, [onClose]);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -95,7 +92,7 @@ const LightboxViewer = ({ items, currentIndex, useCaseId, onClose, onNavigate }:
           </button>
           <div>
             {item.title && <h3 className="font-heading text-sm font-medium text-foreground">{item.title}</h3>}
-            <span className="text-xs text-muted-foreground">{typeBadge} · {currentIndex + 1} of {items.length}</span>
+            <span className="text-xs text-muted-foreground">{typeBadge}</span>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -131,22 +128,6 @@ const LightboxViewer = ({ items, currentIndex, useCaseId, onClose, onNavigate }:
                 draggable={false}
               />
             </div>
-            {items.length > 1 && items.every((it) => it.type === "image") && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                {items.map((it, i) => (
-                  <button
-                    key={it.id}
-                    onClick={(e) => { e.stopPropagation(); onNavigate(i); }}
-                    className={`relative h-14 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-all ${
-                      i === currentIndex ? "border-foreground opacity-100" : "border-transparent opacity-60 hover:opacity-90"
-                    }`}
-                    aria-label={`Go to image ${i + 1}`}
-                  >
-                    <img src={it.thumbnail} alt={it.title || ""} className="h-full w-full object-cover" draggable={false} />
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         )}
         {item.type === "image_carousel" && item.images && item.images.length > 0 && (
@@ -241,24 +222,6 @@ const LightboxViewer = ({ items, currentIndex, useCaseId, onClose, onNavigate }:
               allowFullScreen
             />
           </div>
-        )}
-
-        {/* Navigation arrows */}
-        {currentIndex > 0 && (
-          <button
-            onClick={() => onNavigate(currentIndex - 1)}
-            className="absolute left-3 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-secondary/80 text-foreground backdrop-blur transition-colors hover:bg-muted sm:left-6"
-          >
-            <ChevronLeft size={22} />
-          </button>
-        )}
-        {currentIndex < items.length - 1 && (
-          <button
-            onClick={() => onNavigate(currentIndex + 1)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-secondary/80 text-foreground backdrop-blur transition-colors hover:bg-muted sm:right-6"
-          >
-            <ChevronRight size={22} />
-          </button>
         )}
       </div>
     </div>

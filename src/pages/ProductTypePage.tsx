@@ -344,7 +344,6 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
           currentIndex={lightboxIndex}
           useCaseId={type}
           onClose={() => setLightboxIndex(null)}
-          onNavigate={(i) => setLightboxIndex(i)}
         />
       )}
     </div>

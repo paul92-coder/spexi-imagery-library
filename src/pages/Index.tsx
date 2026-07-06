@@ -355,7 +355,6 @@ const Index = () => {
           currentIndex={lightboxIndex}
           useCaseId={activeTile?.id ?? "use-case"}
           onClose={() => { setLightboxIndex(null); setLightboxItems(null); }}
-          onNavigate={(idx) => setLightboxIndex(idx)}
         />
       )}
     </div>
