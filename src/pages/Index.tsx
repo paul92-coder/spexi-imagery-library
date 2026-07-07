@@ -10,6 +10,11 @@ import { cn } from "@/lib/utils";
 import droneBg from "@/assets/drone-bg.jpg";
 import { HERO_VIDEO_URL } from "@/data/media-cdn";
 import { NianticLogo, EsriLogo, SkywatchLogo } from "@/components/PartnerLogos";
+import apiHeroNorth from "@/assets/api-hero-north.jpg";
+import apiHeroEast from "@/assets/api-hero-east.jpg";
+import apiHeroSouth from "@/assets/api-hero-south.jpg";
+import apiHeroWest from "@/assets/api-hero-west.jpg";
+import apiHeroAbove from "@/assets/api-hero-above.jpg";
 
 const INDUSTRIES = [
   "All",
@@ -23,11 +28,16 @@ const INDUSTRIES = [
 ] as const;
 type Industry = (typeof INDUSTRIES)[number];
 
+// Set once a same-location image set (one upload per product type, all
+// sharing this title) exists — see `imageType` per product below. Left
+// blank, the cards fall back to the plain icon-only design.
+const PRODUCT_CARD_LOCATION_TITLE = "";
+
 const PRODUCT_TYPES = [
-  { id: "ortho" as const, label: "Orthomosaics", description: "Survey-grade geo-referenced maps", icon: MapIcon },
-  { id: "panorama" as const, label: "360° Panoramas", description: "Immersive aerial perspectives", icon: Globe2 },
-  { id: "splat" as const, label: "Gaussian Splats", description: "Photoreal 3D digital twins", icon: Box },
-  { id: "api" as const, label: "5-View API", description: "Aerial context as an API", icon: Compass },
+  { id: "ortho" as const, label: "Orthomosaics", description: "Survey-grade geo-referenced maps", icon: MapIcon, imageType: "orthomosaic" as const },
+  { id: "panorama" as const, label: "360° Panoramas", description: "Immersive aerial perspectives", icon: Globe2, imageType: "oblique" as const },
+  { id: "splat" as const, label: "Gaussian Splats", description: "Photoreal 3D digital twins", icon: Box, imageType: "splat" as const },
+  { id: "api" as const, label: "5-View API", description: "Aerial context as an API", icon: Compass, imageType: "api" as const },
 ];
 
 const BEFORE_AFTER_GROUP = "before-after";
@@ -101,6 +111,20 @@ const Index = () => {
     });
     return out;
   }, [industry, allUseCases]);
+
+  // Looks up the shared-location image set for the "Browse by Product"
+  // cards, keyed by each product's imageType. Empty until
+  // PRODUCT_CARD_LOCATION_TITLE is set.
+  const productCardImages = useMemo(() => {
+    const map: Partial<Record<string, MediaItem>> = {};
+    if (!PRODUCT_CARD_LOCATION_TITLE) return map;
+    allUseCases.forEach((uc) =>
+      uc.items.forEach((item) => {
+        if (item.title === PRODUCT_CARD_LOCATION_TITLE && item.imageType) map[item.imageType] = item;
+      }),
+    );
+    return map;
+  }, [allUseCases]);
 
   // Before/after comparisons get their own cross-use-case group, mirroring
   // how the original site surfaces them as a single "Before & After" shelf
@@ -227,21 +251,33 @@ const Index = () => {
           </h2>
           <p className="mt-2 text-center text-sm text-muted-foreground">Explore imagery by type</p>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {PRODUCT_TYPES.map((pt) => (
-              <Link
-                key={pt.id}
-                to={`/product-type/${pt.id}`}
-                className="group relative block overflow-hidden rounded-xl bg-card ring-1 ring-border transition-all hover:-translate-y-1 hover:ring-foreground/30"
-              >
-                <div className="p-6">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
-                    <pt.icon size={24} />
+            {PRODUCT_TYPES.map((pt) => {
+              const heroItem = productCardImages[pt.imageType];
+              return (
+                <Link
+                  key={pt.id}
+                  to={`/product-type/${pt.id}`}
+                  className="group relative block overflow-hidden rounded-xl bg-card ring-1 ring-border transition-all hover:-translate-y-1 hover:ring-foreground/30"
+                >
+                  {pt.id === "api" ? (
+                    <MiniApiCross />
+                  ) : (
+                    heroItem && (
+                      <div className="aspect-[4/3] overflow-hidden">
+                        <Thumbnail item={heroItem} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      </div>
+                    )
+                  )}
+                  <div className="p-6">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
+                      <pt.icon size={24} />
+                    </div>
+                    <h3 className="mt-4 font-heading text-lg font-semibold text-foreground">{pt.label}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{pt.description}</p>
                   </div>
-                  <h3 className="mt-4 font-heading text-lg font-semibold text-foreground">{pt.label}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{pt.description}</p>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </section>
 
@@ -370,6 +406,26 @@ const Index = () => {
 };
 
 export default Index;
+
+// A small N/E/S/W/Above cross used as the "5-View API" product card's hero
+// image, using one real captured location instead of a single flat photo.
+function MiniApiCross() {
+  return (
+    <div className="aspect-[4/3] overflow-hidden bg-muted p-2">
+      <div className="grid h-full grid-cols-3 grid-rows-3 gap-1">
+        <div />
+        <img src={apiHeroNorth} alt="North" className="h-full w-full rounded object-cover" />
+        <div />
+        <img src={apiHeroWest} alt="West" className="h-full w-full rounded object-cover" />
+        <img src={apiHeroAbove} alt="Above" className="h-full w-full rounded object-cover ring-1 ring-primary/40" />
+        <img src={apiHeroEast} alt="East" className="h-full w-full rounded object-cover" />
+        <div />
+        <img src={apiHeroSouth} alt="South" className="h-full w-full rounded object-cover" />
+        <div />
+      </div>
+    </div>
+  );
+}
 
 function WorkflowStep({ step, title, body }: { step: string; title: string; body: string }) {
   return (
