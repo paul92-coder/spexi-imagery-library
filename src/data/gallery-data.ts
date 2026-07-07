@@ -73,6 +73,11 @@ export interface UseCase {
   subtitle?: string;
   coverImage: string;
   items: MediaItem[];
+  // Keeps a folder off the home page's "Use cases" grid even once it has
+  // content — for niche/background folders that shouldn't compete with the
+  // curated highest-value tiles, while still being reachable directly
+  // (/use-case/:id), through product-type pages, and industry filtering.
+  hideFromHome?: boolean;
 }
 
 // NOTE ON DATA: in the live Lovable/Supabase build, industry + tag metadata is
@@ -429,6 +434,7 @@ export const useCases: UseCase[] = [
     title: "Uploads",
     subtitle: "Admin-uploaded imagery",
     coverImage: constructionSite1Img,
+    hideFromHome: true,
     items: [],
   },
 ];
