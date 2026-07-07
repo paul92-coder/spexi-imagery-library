@@ -16,6 +16,8 @@ import apiHeroSouth from "@/assets/api-hero-south.jpg";
 import apiHeroWest from "@/assets/api-hero-west.jpg";
 import apiHeroAbove from "@/assets/api-hero-above.jpg";
 import productCardSplat from "@/assets/product-card-splat.jpg";
+import productCardOrtho from "@/assets/product-card-ortho.jpg";
+import productCardPanorama from "@/assets/product-card-panorama.jpg";
 
 const INDUSTRIES = [
   "All",
@@ -46,7 +48,11 @@ const PRODUCT_TYPES = [
 // directly rather than uploaded through the admin panel).
 const STATIC_PRODUCT_HERO: Partial<Record<(typeof PRODUCT_TYPES)[number]["id"], string>> = {
   splat: productCardSplat,
+  ortho: productCardOrtho,
+  panorama: productCardPanorama,
 };
+
+const HEXAGON_CLIP_PATH = "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)";
 
 const BEFORE_AFTER_GROUP = "before-after";
 
@@ -269,6 +275,17 @@ const Index = () => {
                 >
                   {pt.id === "api" ? (
                     <MiniApiCross />
+                  ) : pt.id === "ortho" && STATIC_PRODUCT_HERO.ortho ? (
+                    <div className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted">
+                      <div className="aspect-square h-[85%]">
+                        <img
+                          src={STATIC_PRODUCT_HERO.ortho}
+                          alt={pt.label}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          style={{ clipPath: HEXAGON_CLIP_PATH }}
+                        />
+                      </div>
+                    </div>
                   ) : STATIC_PRODUCT_HERO[pt.id] ? (
                     <div className="aspect-[4/3] overflow-hidden">
                       <img
