@@ -20,21 +20,38 @@ const DIRECTION_LABELS: Record<string, string> = {
 };
 const getDirection = (item: MediaItem) => item.tags?.find((t) => t in DIRECTION_LABELS);
 
-// Picks the location (grouped by title) with the most direction-tagged
-// images, so the hero sample grid shows a real, consistent 5-view set
-// once one exists, instead of mixing images from different locations.
+// Same-titled 5-View API uploads are already bundled into one
+// image_carousel item upstream (see useMediaOverrides). Pick whichever
+// location has the most views, so the hero sample grid shows a real,
+// consistent 5-view set once one exists.
 const pickHeroLocation = (entries: { item: MediaItem; useCase: UseCase }[]) => {
-  const groups = new Map<string, MediaItem[]>();
+  let best: MediaItem | null = null;
+  let bestCount = 0;
   for (const { item } of entries) {
-    const key = item.title || "Untitled location";
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(item);
-  }
-  let best: MediaItem[] = [];
-  for (const items of groups.values()) {
-    if (items.length > best.length) best = items;
+    const count = item.type === "image_carousel" ? item.images?.length ?? 0 : 1;
+    if (count > bestCount) {
+      best = item;
+      bestCount = count;
+    }
   }
   return best;
+};
+
+// Extracts a direction -> image lookup from either a bundled image_carousel
+// location (multiple views) or a standalone single-view item.
+const byDirectionOf = (item: MediaItem | null): Partial<Record<string, { src: string; title?: string }>> => {
+  const byDirection: Partial<Record<string, { src: string; title?: string }>> = {};
+  if (!item) return byDirection;
+  if (item.type === "image_carousel" && item.images) {
+    for (const img of item.images) {
+      const dir = img.title?.toLowerCase();
+      if (dir && dir in DIRECTION_LABELS) byDirection[dir] = img;
+    }
+  } else if (item.src) {
+    const dir = getDirection(item) ?? "above";
+    byDirection[dir] = { src: item.src, title: item.title };
+  }
+  return byDirection;
 };
 
 interface ProductConfig {
@@ -310,6 +327,8 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
           )
         ) : folderItems.length === 0 ? (
           <p className="mt-16 text-center text-muted-foreground">No imagery in this folder yet.</p>
+        ) : type === "api" ? (
+          <ApiLocationCross item={folderItems[0]} />
         ) : (
           <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {folderItems.map((item, i) => (
@@ -322,23 +341,14 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
                 <div className="aspect-[4/3] overflow-hidden rounded-xl bg-muted ring-1 ring-border transition-all group-hover:ring-foreground/30">
                   <Thumbnail item={item} priority={i === 0} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 </div>
-                {item.title && (
-                  <div className="mt-3 px-1 text-sm font-medium text-foreground">
-                    {item.title}
-                    {type === "api" && getDirection(item) && (
-                      <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                        · {DIRECTION_LABELS[getDirection(item)!]}
-                      </span>
-                    )}
-                  </div>
-                )}
+                {item.title && <div className="mt-3 px-1 text-sm font-medium text-foreground">{item.title}</div>}
               </button>
             ))}
           </div>
         )}
       </main>
 
-      {lightboxIndex !== null && folderItems[lightboxIndex] && (
+      {type !== "api" && lightboxIndex !== null && folderItems[lightboxIndex] && (
         <LightboxViewer
           items={folderItems}
           currentIndex={lightboxIndex}
@@ -368,13 +378,83 @@ const INDUSTRIES_LIST = [
   "Spatial / Physical AI",
 ];
 
+// The 5-View API page shows a location's views arranged as a N/E/S/W/Above
+// cross as soon as its folder opens — no extra click into a generic grid.
+// This is deliberately API-page-only: the same underlying images are also
+// reused in regular use-case folders elsewhere on the site, where they
+// should keep opening in the standard carousel + filmstrip lightbox.
+function ApiLocationCross({ item }: { item: MediaItem }) {
+  const byDirection = useMemo(() => byDirectionOf(item), [item]);
+  const [openDir, setOpenDir] = useState<string | null>(null);
+  const openImage = openDir ? byDirection[openDir] : null;
+
+  return (
+    <>
+      <div className="mx-auto mt-6 grid max-w-2xl grid-cols-3 grid-rows-3 gap-3 sm:gap-4">
+        <div />
+        <CrossTile label="North" data={byDirection.north} onClick={() => setOpenDir("north")} />
+        <div />
+        <CrossTile label="West" data={byDirection.west} onClick={() => setOpenDir("west")} />
+        <CrossTile label="Above" data={byDirection.above} highlight onClick={() => setOpenDir("above")} />
+        <CrossTile label="East" data={byDirection.east} onClick={() => setOpenDir("east")} />
+        <div />
+        <CrossTile label="South" data={byDirection.south} onClick={() => setOpenDir("south")} />
+        <div />
+      </div>
+      {openImage && (
+        <LightboxViewer
+          items={[{
+            id: `${item.id}-${openDir}`,
+            type: "image",
+            title: item.title ? `${item.title} – ${DIRECTION_LABELS[openDir!]}` : DIRECTION_LABELS[openDir!],
+            thumbnail: openImage.src,
+            src: openImage.src,
+          }]}
+          currentIndex={0}
+          useCaseId="api"
+          onClose={() => setOpenDir(null)}
+        />
+      )}
+    </>
+  );
+}
+
+function CrossTile({
+  label,
+  data,
+  highlight,
+  onClick,
+}: {
+  label: string;
+  data?: { src: string; title?: string };
+  highlight?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={!data}
+      className={cn(
+        "group relative aspect-square overflow-hidden rounded-xl bg-muted ring-1 ring-border transition-all",
+        highlight && "ring-primary/50",
+        data && "hover:-translate-y-0.5 hover:ring-foreground/30",
+      )}
+    >
+      {data ? (
+        <img src={data.src} alt={label} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      ) : (
+        <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">No {label.toLowerCase()}</div>
+      )}
+      <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary-foreground shadow-md">
+        {label}
+      </span>
+    </button>
+  );
+}
+
 function ApiSampleGrid({ entries }: { entries: { item: MediaItem; useCase: UseCase }[] }) {
-  const heroItems = useMemo(() => pickHeroLocation(entries), [entries]);
-  const byDirection: Partial<Record<string, MediaItem>> = {};
-  for (const item of heroItems) {
-    const dir = getDirection(item);
-    if (dir && !byDirection[dir]) byDirection[dir] = item;
-  }
+  const hero = useMemo(() => pickHeroLocation(entries), [entries]);
+  const byDirection = useMemo(() => byDirectionOf(hero), [hero]);
   const hasAny = Object.keys(byDirection).length > 0;
 
   return (
@@ -383,13 +463,13 @@ function ApiSampleGrid({ entries }: { entries: { item: MediaItem; useCase: UseCa
       <div className="relative rounded-2xl border border-border bg-card/40 p-4 backdrop-blur-sm sm:p-5">
         <div className="grid grid-cols-3 grid-rows-3 gap-2 sm:gap-3" style={{ aspectRatio: "1/1" }}>
           <div />
-          <SampleTile label="North" item={byDirection.north} />
+          <SampleTile label="North" src={byDirection.north?.src} />
           <div />
-          <SampleTile label="West" item={byDirection.west} />
-          <SampleTile label="Above" item={byDirection.above} highlight />
-          <SampleTile label="East" item={byDirection.east} />
+          <SampleTile label="West" src={byDirection.west?.src} />
+          <SampleTile label="Above" src={byDirection.above?.src} highlight />
+          <SampleTile label="East" src={byDirection.east?.src} />
           <div />
-          <SampleTile label="South" item={byDirection.south} />
+          <SampleTile label="South" src={byDirection.south?.src} />
           <div />
         </div>
         {!hasAny && (
@@ -487,11 +567,11 @@ function HeroShowcase({ entries, type }: { entries: { item: MediaItem; useCase: 
   );
 }
 
-function SampleTile({ label, item, highlight }: { label: string; item?: MediaItem; highlight?: boolean }) {
+function SampleTile({ label, src, highlight }: { label: string; src?: string; highlight?: boolean }) {
   return (
     <div className={cn("relative overflow-hidden rounded-md bg-muted ring-1 ring-border aspect-square", highlight && "ring-primary/50")}>
-      {item ? (
-        <Thumbnail item={item} className="h-full w-full object-cover" />
+      {src ? (
+        <img src={src} alt={label} className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">No {label.toLowerCase()}</div>
       )}
