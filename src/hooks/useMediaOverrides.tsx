@@ -27,10 +27,16 @@ export interface MediaUpload {
   use_case: string | null;
 }
 
+export interface FolderSetting {
+  folder_id: string;
+  hidden: boolean;
+}
+
 interface OverridesContextValue {
   overrides: Record<string, MediaOverride>;
   useCases: UseCase[];
   uploads: MediaUpload[];
+  folderSettings: Record<string, FolderSetting>;
   loading: boolean;
   refresh: () => Promise<void>;
 }
@@ -142,6 +148,7 @@ export const MediaOverridesProvider = ({ children }: { children: ReactNode }) =>
   const [overrides, setOverrides] = useState<Record<string, MediaOverride>>({});
   const [uploads, setUploads] = useState<MediaUpload[]>([]);
   const [uploadItems, setUploadItems] = useState<MediaItem[]>([]);
+  const [folderSettings, setFolderSettings] = useState<Record<string, FolderSetting>>({});
   const [loading, setLoading] = useState(true);
 
   const signedUrl = async (path: string) => {
@@ -163,17 +170,23 @@ export const MediaOverridesProvider = ({ children }: { children: ReactNode }) =>
   };
 
   const refresh = async () => {
-    const [ovRes, upRes] = await Promise.all([
+    const [ovRes, upRes, folderRes] = await Promise.all([
       supabase.from("media_overrides").select("media_id,title,category,tags,industry,imagery_type,use_case"),
       supabase
         .from("media_uploads")
         .select("id,use_case_id,media_type,storage_path,thumbnail_path,preview_path,title,category,tags,industry,imagery_type,use_case")
         .order("created_at", { ascending: false }),
+      supabase.from("folder_settings").select("folder_id,hidden"),
     ]);
     if (!ovRes.error && ovRes.data) {
       const map: Record<string, MediaOverride> = {};
       for (const row of ovRes.data) map[row.media_id] = row as MediaOverride;
       setOverrides(map);
+    }
+    if (!folderRes.error && folderRes.data) {
+      const map: Record<string, FolderSetting> = {};
+      for (const row of folderRes.data as FolderSetting[]) map[row.folder_id] = row;
+      setFolderSettings(map);
     }
     if (!upRes.error && upRes.data) {
       const rows = upRes.data as MediaUpload[];
@@ -231,15 +244,18 @@ export const MediaOverridesProvider = ({ children }: { children: ReactNode }) =>
     }
     return baseUseCases.map((uc) => ({
       ...uc,
+      // A folder can be hidden either in code (permanent, e.g. Uploads) or
+      // live via the Admin panel's Folders toggle — either one hides it.
+      hideFromHome: uc.hideFromHome || !!folderSettings[uc.id]?.hidden,
       items: groupApiViews(groupBeforeAfterPairs([
         ...uc.items.map((it) => applyOverride(it, overrides[it.id])),
         ...(byUseCase[uc.id] ?? []),
       ])),
     }));
-  }, [overrides, uploadItems, uploads]);
+  }, [overrides, uploadItems, uploads, folderSettings]);
 
   return (
-    <OverridesContext.Provider value={{ overrides, useCases, uploads, loading, refresh }}>
+    <OverridesContext.Provider value={{ overrides, useCases, uploads, folderSettings, loading, refresh }}>
       {children}
     </OverridesContext.Provider>
   );

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { X, LogOut, Upload, Trash2 } from "lucide-react";
+import { X, LogOut, Upload, Trash2, Eye, EyeOff } from "lucide-react";
 import Header from "@/components/Header";
 import { useAuth } from "@/hooks/useAuth";
 import { useMediaOverrides } from "@/hooks/useMediaOverrides";
@@ -89,7 +89,7 @@ const FOLDERS: { id: FolderId; label: string; match: (r: Row) => boolean }[] = [
 
 const Admin = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
-  const { overrides, uploads, refresh } = useMediaOverrides();
+  const { overrides, uploads, folderSettings, refresh } = useMediaOverrides();
   const [rows, setRows] = useState<Row[]>([]);
   const [tagDraft, setTagDraft] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
@@ -252,6 +252,21 @@ const Admin = () => {
     if (error) {
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
       setRows((rs) => rs.map((r) => (r.mediaId === row.mediaId ? { ...r, saving: false } : r)));
+      return;
+    }
+    await refresh();
+  };
+
+  // Toggle whether a folder shows up on the home page grid. Upserts into
+  // folder_settings, which useMediaOverrides merges with any hideFromHome
+  // set in code (e.g. Uploads) — either one hides it.
+  const [savingFolderId, setSavingFolderId] = useState<string | null>(null);
+  const setFolderHidden = async (folderId: string, hidden: boolean) => {
+    setSavingFolderId(folderId);
+    const { error } = await supabase.from("folder_settings").upsert({ folder_id: folderId, hidden }, { onConflict: "folder_id" });
+    setSavingFolderId(null);
+    if (error) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
       return;
     }
     await refresh();
@@ -612,6 +627,44 @@ const Admin = () => {
                   </div>
                 </div>
               )}
+            </section>
+
+            <section className="mt-6 rounded-lg border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Eye size={16} className="text-primary" />
+                <h2 className="font-heading text-sm font-semibold text-foreground">Folders</h2>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Hide a folder from the home page grid without deleting its content — it stays reachable via its own page and product-type/industry filters.
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {FOLDER_OPTIONS.map((f) => {
+                  const baseUc = baseUseCases.find((uc) => uc.id === f.id);
+                  const codeHidden = !!baseUc?.hideFromHome;
+                  const hidden = codeHidden || !!folderSettings[f.id]?.hidden;
+                  return (
+                    <div key={f.id} className="flex items-center justify-between gap-2 rounded border border-border bg-background/40 px-3 py-2 text-xs">
+                      <span className="truncate text-foreground">{f.title}</span>
+                      <button
+                        type="button"
+                        disabled={codeHidden || savingFolderId === f.id}
+                        onClick={() => setFolderHidden(f.id, !hidden)}
+                        title={codeHidden ? "Hidden in code — can't be toggled here" : hidden ? "Show on home page" : "Hide from home page"}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors",
+                          hidden
+                            ? "border-border text-muted-foreground"
+                            : "border-primary bg-primary/15 text-primary",
+                          codeHidden && "opacity-50",
+                        )}
+                      >
+                        {hidden ? <EyeOff size={12} /> : <Eye size={12} />}
+                        {hidden ? "Hidden" : "Visible"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </section>
 
             <div className="mt-8">
