@@ -105,8 +105,16 @@ const Admin = () => {
   const [upCategory, setUpCategory] = useState("");
   const [upTags, setUpTags] = useState("");
   const [upFileTags, setUpFileTags] = useState<Record<number, string[]>>({});
+  const [upIsBeforeAfter, setUpIsBeforeAfter] = useState(false);
+  const [upBeforeAfterRoles, setUpBeforeAfterRoles] = useState<Record<number, "before" | "after">>({});
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>("");
+
+  const beforeAfterValid =
+    !upIsBeforeAfter ||
+    (upFiles.length === 2 &&
+      Object.keys(upBeforeAfterRoles).length === 2 &&
+      new Set(Object.values(upBeforeAfterRoles)).size === 2);
 
   // Build rows from base data + current overrides
   useEffect(() => {
@@ -338,13 +346,14 @@ const Admin = () => {
   };
 
   const handleUpload = async () => {
-    if (upFiles.length === 0) return;
+    if (upFiles.length === 0 || !beforeAfterValid) return;
     setUploading(true);
     setUploadProgress("");
     const globalTags = upTags
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean);
+    const pairId = upIsBeforeAfter ? crypto.randomUUID() : null;
     try {
       for (let i = 0; i < upFiles.length; i++) {
         const file = upFiles[i];
@@ -357,13 +366,14 @@ const Admin = () => {
           .upload(path, file, { contentType: file.type, upsert: false });
         if (upErr) throw upErr;
         const fileTags = upFileTags[i] || [];
+        const pairTags = pairId ? [`before-after-pair:${pairId}`, `role:${upBeforeAfterRoles[i]}`] : [];
         const { error: insErr } = await supabase.from("media_uploads").insert({
           use_case_id: upFolder,
           media_type: isVideo ? "video" : "image",
           storage_path: path,
           title: upTitle || null,
           category: upCategory || null,
-          tags: [...globalTags, ...fileTags, ...upIndustries.slice(1)],
+          tags: [...globalTags, ...fileTags, ...upIndustries.slice(1), ...pairTags],
           industry: upIndustries[0] || null,
           imagery_type: upImageryType,
           created_by: user!.id,
@@ -373,6 +383,8 @@ const Admin = () => {
       toast({ title: `Uploaded ${upFiles.length} file${upFiles.length === 1 ? "" : "s"}` });
       setUpFiles([]);
       setUpFileTags({});
+      setUpIsBeforeAfter(false);
+      setUpBeforeAfterRoles({});
       setUpTitle("");
       setUpCategory("");
       setUpTags("");
@@ -430,7 +442,7 @@ const Admin = () => {
                   type="file"
                   multiple
                   accept="image/*,video/*"
-                  onChange={(e) => setUpFiles(Array.from(e.target.files ?? []))}
+                  onChange={(e) => { setUpFiles(Array.from(e.target.files ?? [])); setUpBeforeAfterRoles({}); }}
                   className="text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-primary-foreground"
                 />
                 <div>
@@ -460,7 +472,7 @@ const Admin = () => {
                 <Input placeholder="Title (optional)" value={upTitle} onChange={(e) => setUpTitle(e.target.value)} />
                 <Input placeholder="Category (optional)" value={upCategory} onChange={(e) => setUpCategory(e.target.value)} />
                 <Input placeholder="Tags (comma-separated)" value={upTags} onChange={(e) => setUpTags(e.target.value)} />
-                <Button onClick={handleUpload} disabled={upFiles.length === 0 || uploading}>
+                <Button onClick={handleUpload} disabled={upFiles.length === 0 || uploading || !beforeAfterValid}>
                   {uploading ? "Uploading…" : `Upload${upFiles.length > 1 ? ` ${upFiles.length} files` : ""}`}
                 </Button>
               </div>
@@ -485,6 +497,17 @@ const Admin = () => {
                   );
                 })}
               </div>
+              <label className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={upIsBeforeAfter}
+                  onChange={(e) => { setUpIsBeforeAfter(e.target.checked); setUpBeforeAfterRoles({}); }}
+                />
+                Upload as a Before/After comparison (select exactly 2 images, then mark which is which below)
+              </label>
+              {upIsBeforeAfter && upFiles.length !== 2 && (
+                <p className="mt-1 text-xs text-destructive">Select exactly 2 images to upload as a pair.</p>
+              )}
               {upFiles.length > 0 && (
                 <div className="mt-3">
                   <div className="text-xs text-muted-foreground mb-1.5">{upFiles.length} file{upFiles.length === 1 ? "" : "s"} selected</div>
@@ -496,20 +519,45 @@ const Admin = () => {
                           type="button"
                           onClick={() => {
                             setUpFiles((files) => files.filter((_, idx) => idx !== i));
-                            setUpFileTags((prev) => {
-                              const next: Record<number, string[]> = {};
+                            const shiftIndices = <T,>(prev: Record<number, T>) => {
+                              const next: Record<number, T> = {};
                               Object.entries(prev).forEach(([k, v]) => {
                                 const idx = Number(k);
                                 if (idx < i) next[idx] = v;
                                 else if (idx > i) next[idx - 1] = v;
                               });
                               return next;
-                            });
+                            };
+                            setUpFileTags(shiftIndices);
+                            setUpBeforeAfterRoles(shiftIndices);
                           }}
                           className="hover:text-foreground"
                         >
                           <X size={12} />
                         </button>
+                        {upIsBeforeAfter && (
+                          <div className="flex flex-wrap items-center gap-1">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Role:</span>
+                            {(["before", "after"] as const).map((role) => {
+                              const active = upBeforeAfterRoles[i] === role;
+                              return (
+                                <button
+                                  key={role}
+                                  type="button"
+                                  onClick={() => setUpBeforeAfterRoles((prev) => ({ ...prev, [i]: role }))}
+                                  className={cn(
+                                    "rounded-full border px-2 py-0.5 text-[11px] capitalize transition-colors",
+                                    active
+                                      ? "border-primary bg-primary/15 text-primary"
+                                      : "border-border text-muted-foreground hover:text-foreground",
+                                  )}
+                                >
+                                  {role}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                         {upImageryType === "5-View API" && (
                           <div className="flex flex-wrap items-center gap-1">
                             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Direction:</span>

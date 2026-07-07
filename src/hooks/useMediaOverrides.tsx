@@ -81,6 +81,49 @@ function groupApiViews(items: MediaItem[]): MediaItem[] {
   return [...passthrough, ...grouped];
 }
 
+const PAIR_TAG_PREFIX = "before-after-pair:";
+const ROLE_BEFORE = "role:before";
+const ROLE_AFTER = "role:after";
+
+// Before/after comparisons are uploaded as two separate rows sharing a
+// `before-after-pair:<id>` tag plus a `role:before`/`role:after` tag.
+// Merge each complete pair into a single before_after item; an incomplete
+// pair (e.g. only one side uploaded so far) is left as plain images.
+function groupBeforeAfterPairs(items: MediaItem[]): MediaItem[] {
+  const groups = new Map<string, MediaItem[]>();
+  const passthrough: MediaItem[] = [];
+  for (const item of items) {
+    const pairTag = item.tags?.find((t) => t.startsWith(PAIR_TAG_PREFIX));
+    if (pairTag) {
+      const key = pairTag.slice(PAIR_TAG_PREFIX.length);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(item);
+    } else {
+      passthrough.push(item);
+    }
+  }
+  const grouped: MediaItem[] = [];
+  const cleanTags = (it: MediaItem) => (it.tags ?? []).filter((t) => !t.startsWith(PAIR_TAG_PREFIX) && t !== ROLE_BEFORE && t !== ROLE_AFTER);
+  for (const group of groups.values()) {
+    const before = group.find((it) => it.tags?.includes(ROLE_BEFORE));
+    const after = group.find((it) => it.tags?.includes(ROLE_AFTER));
+    if (before && after) {
+      grouped.push({
+        ...before,
+        id: `before-after-${before.id}`,
+        type: "before_after",
+        beforeSrc: before.src,
+        afterSrc: after.src,
+        thumbnail: before.thumbnail,
+        tags: Array.from(new Set([...cleanTags(before), ...cleanTags(after)])),
+      });
+    } else {
+      grouped.push(...group.map((it) => ({ ...it, tags: cleanTags(it) })));
+    }
+  }
+  return [...passthrough, ...grouped];
+}
+
 function applyOverride(item: MediaItem, ov?: MediaOverride): MediaItem {
   if (!ov) return item;
   return {
@@ -188,10 +231,10 @@ export const MediaOverridesProvider = ({ children }: { children: ReactNode }) =>
     }
     return baseUseCases.map((uc) => ({
       ...uc,
-      items: groupApiViews([
+      items: groupApiViews(groupBeforeAfterPairs([
         ...uc.items.map((it) => applyOverride(it, overrides[it.id])),
         ...(byUseCase[uc.id] ?? []),
-      ]),
+      ])),
     }));
   }, [overrides, uploadItems, uploads]);
 
