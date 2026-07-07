@@ -211,6 +211,13 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
 
   const showItemsInline = !folder && !groupByLocation && folders.length === 1;
 
+  // A folder with exactly one photo has nothing to pick between — open it
+  // full-screen immediately instead of making the user click through a
+  // one-tile grid first.
+  useEffect(() => {
+    if (type !== "api" && folder && folderItems.length === 1) setLightboxIndex(0);
+  }, [type, folder, folderItems]);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -334,7 +341,7 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
           <p className="mt-16 text-center text-muted-foreground">No imagery in this folder yet.</p>
         ) : type === "api" ? (
           <ApiLocationCross item={folderItems[0]} />
-        ) : (
+        ) : folderItems.length === 1 ? null : (
           <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {folderItems.map((item, i) => (
               <button
@@ -358,7 +365,12 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
           items={folderItems}
           currentIndex={lightboxIndex}
           useCaseId={type}
-          onClose={() => setLightboxIndex(null)}
+          onClose={() => {
+            setLightboxIndex(null);
+            // A single-item folder has no grid to return to — go all the
+            // way back to the location/use-case list instead.
+            if (folderItems.length === 1) closeFolder();
+          }}
         />
       )}
     </div>
