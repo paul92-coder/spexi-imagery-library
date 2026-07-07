@@ -21,7 +21,6 @@ interface Row {
   tags: string[];
   industry: string;
   imageryType: string;
-  useCase: string;
   folderId: string;
   thumbnail: string;
   dirty: boolean;
@@ -41,6 +40,28 @@ const INDUSTRY_OPTIONS = [
   "Spatial / Physical AI",
   "Other",
 ];
+
+// An item matches multiple industries by storing one as the primary
+// `industry` column and the rest as plain tags (see Index.tsx's filter,
+// which matches on either). These helpers keep that in sync with a
+// multi-select UI instead of admins hand-managing tags for it.
+const getSelectedIndustries = (row: { industry: string; tags: string[] }) => {
+  const selected = new Set<string>();
+  if (row.industry) selected.add(row.industry);
+  row.tags.forEach((t) => { if (INDUSTRY_OPTIONS.includes(t)) selected.add(t); });
+  return selected;
+};
+
+const toggleIndustry = (row: { industry: string; tags: string[] }, value: string) => {
+  const selected = getSelectedIndustries(row);
+  if (selected.has(value)) selected.delete(value);
+  else selected.add(value);
+  const list = Array.from(selected);
+  return {
+    industry: list[0] ?? "",
+    tags: [...row.tags.filter((t) => !INDUSTRY_OPTIONS.includes(t)), ...list.slice(1)],
+  };
+};
 
 const IMAGERY_TYPE_OPTIONS = [
   "360 degree panorama",
@@ -66,28 +87,6 @@ const FOLDERS: { id: FolderId; label: string; match: (r: Row) => boolean }[] = [
   { id: "other", label: "Uncategorized", match: () => true },
 ];
 
-const USE_CASE_OPTIONS = [
-  "Progress tracking",
-  "Site monitoring",
-  "Building envelope review",
-  "Underwriting",
-  "Claims documentation",
-  "Property risk assessment",
-  "Asset inspection",
-  "Vegetation management",
-  "Storm response",
-  "Training data",
-  "Change detection",
-  "Object recognition",
-  "Scene recognition",
-  "Permitting",
-  "Code compliance",
-  "Urban planning",
-  "Site selection",
-  "Property condition review",
-  "Portfolio monitoring",
-];
-
 const Admin = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
   const { overrides, uploads, refresh } = useMediaOverrides();
@@ -100,8 +99,7 @@ const Admin = () => {
   // Upload form state
   const [upFiles, setUpFiles] = useState<File[]>([]);
   const [upFolder, setUpFolder] = useState<string>("uploads");
-  const [upUseCase, setUpUseCase] = useState<string>(USE_CASE_OPTIONS[0]);
-  const [upIndustry, setUpIndustry] = useState<string>("Other");
+  const [upIndustries, setUpIndustries] = useState<string[]>([]);
   const [upImageryType, setUpImageryType] = useState<string>("Oblique");
   const [upTitle, setUpTitle] = useState("");
   const [upCategory, setUpCategory] = useState("");
@@ -126,7 +124,6 @@ const Admin = () => {
           tags: ov?.tags ?? [],
           industry: ov?.industry ?? "",
           imageryType: ov?.imagery_type ?? "",
-          useCase: ov?.use_case ?? "",
           folderId: uc.id,
           thumbnail: item.thumbnail,
           dirty: false,
@@ -143,7 +140,6 @@ const Admin = () => {
         tags: u.tags ?? [],
         industry: u.industry ?? "",
         imageryType: u.imagery_type ?? "",
-        useCase: u.use_case ?? "",
         folderId: u.use_case_id,
         thumbnail: u.media_type === "video" ? "" : (signedUrls[u.storage_path] ?? ""),
         dirty: false,
@@ -238,7 +234,6 @@ const Admin = () => {
       tags: nextTags,
       industry: row.industry || null,
       imagery_type: nextImageryType || null,
-      use_case: row.useCase || null,
     };
     const { error } = row.isUpload && row.uploadId
       ? await supabase
@@ -267,6 +262,29 @@ const Admin = () => {
     await refresh();
   };
 
+  // Immediately persist a toggled industry (multi-select via primary
+  // industry column + overflow tags — see toggleIndustry above).
+  const setIndustry = async (row: Row, value: string) => {
+    const next = toggleIndustry(row, value);
+    setRows((rs) => rs.map((r) => (r.mediaId === row.mediaId ? { ...r, ...next, saving: true } : r)));
+    const fields = {
+      title: row.title || null,
+      category: row.category || null,
+      tags: next.tags,
+      industry: next.industry || null,
+      imagery_type: row.imageryType || null,
+    };
+    const { error } = row.isUpload && row.uploadId
+      ? await supabase.from("media_uploads").update({ tags: next.tags, industry: next.industry || null }).eq("id", row.uploadId)
+      : await supabase.from("media_overrides").upsert({ media_id: row.mediaId, ...fields }, { onConflict: "media_id" });
+    if (error) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+      setRows((rs) => rs.map((r) => (r.mediaId === row.mediaId ? { ...r, saving: false } : r)));
+      return;
+    }
+    await refresh();
+  };
+
   const saveRow = async (id: string, overrides?: Partial<Row>) => {
     const base = rows.find((r) => r.mediaId === id);
     if (!base) return;
@@ -278,7 +296,6 @@ const Admin = () => {
       tags: row.tags,
       industry: row.industry || null,
       imagery_type: row.imageryType || null,
-      use_case: row.useCase || null,
     };
     const { error } = row.isUpload && row.uploadId
       ? await supabase.from("media_uploads").update(fields).eq("id", row.uploadId)
@@ -342,13 +359,12 @@ const Admin = () => {
         const fileTags = upFileTags[i] || [];
         const { error: insErr } = await supabase.from("media_uploads").insert({
           use_case_id: upFolder,
-          use_case: upUseCase,
           media_type: isVideo ? "video" : "image",
           storage_path: path,
           title: upTitle || null,
           category: upCategory || null,
-          tags: [...globalTags, ...fileTags],
-          industry: upIndustry,
+          tags: [...globalTags, ...fileTags, ...upIndustries.slice(1)],
+          industry: upIndustries[0] || null,
           imagery_type: upImageryType,
           created_by: user!.id,
         });
@@ -360,10 +376,9 @@ const Admin = () => {
       setUpTitle("");
       setUpCategory("");
       setUpTags("");
-      setUpIndustry("Other");
+      setUpIndustries([]);
       setUpImageryType("Oblique");
       setUpFolder("uploads");
-      setUpUseCase(USE_CASE_OPTIONS[0]);
       setUploadProgress("");
       await refresh();
     } catch (e: any) {
@@ -429,33 +444,6 @@ const Admin = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Use case</label>
-                  <select
-                    value={upUseCase}
-                    onChange={(e) => setUpUseCase(e.target.value)}
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    {USE_CASE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Industry</label>
-                  <select
-                    value={upIndustry}
-                    onChange={(e) => setUpIndustry(e.target.value)}
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    <option>Construction, Engineering, Architecture</option>
-                    <option>Local Government</option>
-                    <option>Utilities</option>
-                    <option>Insurance</option>
-                    <option>Finance</option>
-                    <option>Commercial Real Estate</option>
-                    <option>Spatial / Physical AI</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <div>
                   <label className="block text-xs text-muted-foreground mb-1">Image type</label>
                   <select
                     value={upImageryType}
@@ -475,6 +463,27 @@ const Admin = () => {
                 <Button onClick={handleUpload} disabled={upFiles.length === 0 || uploading}>
                   {uploading ? "Uploading…" : `Upload${upFiles.length > 1 ? ` ${upFiles.length} files` : ""}`}
                 </Button>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Industries:</span>
+                {INDUSTRY_OPTIONS.map((o) => {
+                  const active = upIndustries.includes(o);
+                  return (
+                    <button
+                      key={o}
+                      type="button"
+                      onClick={() => setUpIndustries((prev) => (active ? prev.filter((i) => i !== o) : [...prev, o]))}
+                      className={cn(
+                        "rounded-full border px-2.5 py-1 text-[11px] transition-colors",
+                        active
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {o}
+                    </button>
+                  );
+                })}
               </div>
               {upFiles.length > 0 && (
                 <div className="mt-3">
@@ -545,7 +554,7 @@ const Admin = () => {
                       <div key={u.id} className="flex items-center justify-between gap-2 rounded border border-border bg-background/40 px-2 py-1.5 text-xs">
                         <div className="min-w-0">
                           <div className="truncate text-foreground">{u.title || u.storage_path.split("/").pop()}</div>
-                          <div className="truncate text-muted-foreground">{u.use_case ? `${u.use_case} · ` : ""}{u.media_type}{u.industry ? ` · ${u.industry}` : ""}{u.imagery_type ? ` · ${u.imagery_type}` : ""}</div>
+                          <div className="truncate text-muted-foreground">{u.media_type}{u.industry ? ` · ${u.industry}` : ""}{u.imagery_type ? ` · ${u.imagery_type}` : ""}</div>
                         </div>
                         <button onClick={() => deleteUpload(u.id, u.storage_path)} className="text-muted-foreground hover:text-destructive">
                           <Trash2 size={14} />
@@ -623,19 +632,11 @@ const Admin = () => {
                         onBlur={() => { if (r.dirty) saveRow(r.mediaId); }}
                       />
                     </div>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <select
-                        value={r.industry}
-                        onChange={(e) => { const v = e.target.value; updateRow(r.mediaId, { industry: v }); saveRow(r.mediaId, { industry: v }); }}
-                        className="h-9 rounded-md border border-input bg-background px-2 text-xs"
-                      >
-                        <option value="">Industry…</option>
-                        {INDUSTRY_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                      </select>
+                    <div>
                       <select
                         value={r.imageryType}
                         onChange={(e) => { const v = e.target.value; updateRow(r.mediaId, { imageryType: v }); saveRow(r.mediaId, { imageryType: v }); }}
-                        className="h-9 rounded-md border border-input bg-background px-2 text-xs"
+                        className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
                       >
                         <option value="">Image type…</option>
                         {IMAGERY_TYPE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -652,15 +653,27 @@ const Admin = () => {
                         </select>
                       </div>
                     )}
-                    <div>
-                      <select
-                        value={r.useCase}
-                        onChange={(e) => { const v = e.target.value; updateRow(r.mediaId, { useCase: v }); saveRow(r.mediaId, { useCase: v }); }}
-                        className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
-                      >
-                        <option value="">Use case…</option>
-                        {USE_CASE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                      </select>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Industries:</span>
+                      {INDUSTRY_OPTIONS.map((o) => {
+                        const active = getSelectedIndustries(r).has(o);
+                        return (
+                          <button
+                            key={o}
+                            type="button"
+                            disabled={r.saving}
+                            onClick={() => setIndustry(r, o)}
+                            className={cn(
+                              "rounded-full border px-2.5 py-1 text-[11px] transition-colors",
+                              active
+                                ? "border-primary bg-primary/15 text-primary"
+                                : "border-border text-muted-foreground hover:text-foreground",
+                            )}
+                          >
+                            {o}
+                          </button>
+                        );
+                      })}
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5">
                       {r.tags.map((t) => (
