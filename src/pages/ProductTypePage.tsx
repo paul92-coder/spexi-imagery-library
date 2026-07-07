@@ -390,7 +390,7 @@ function ApiLocationCross({ item }: { item: MediaItem }) {
 
   return (
     <>
-      <div className="mx-auto mt-6 grid max-w-2xl grid-cols-3 grid-rows-3 gap-3 sm:gap-4">
+      <div className="mx-auto mt-6 grid w-full max-w-5xl grid-cols-3 grid-rows-3 gap-4 sm:gap-5 lg:gap-6">
         <div />
         <CrossTile label="North" data={byDirection.north} onClick={() => setOpenDir("north")} />
         <div />
@@ -443,9 +443,9 @@ function CrossTile({
       {data ? (
         <img src={data.src} alt={label} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
       ) : (
-        <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">No {label.toLowerCase()}</div>
+        <div className="flex h-full items-center justify-center text-xs text-muted-foreground sm:text-sm">No {label.toLowerCase()}</div>
       )}
-      <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary-foreground shadow-md">
+      <span className="absolute left-3 top-3 rounded-full bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary-foreground shadow-md sm:text-sm">
         {label}
       </span>
     </button>
