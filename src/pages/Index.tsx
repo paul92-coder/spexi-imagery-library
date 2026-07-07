@@ -105,10 +105,13 @@ const Index = () => {
   // Before/after comparisons get their own cross-use-case group, mirroring
   // how the original site surfaces them as a single "Before & After" shelf
   // regardless of which use case they came from.
-  const beforeAfterEntries = useMemo(
-    () => filteredEntries.filter((e) => e.item.type === "before_after"),
-    [filteredEntries],
-  );
+  const beforeAfterEntries = useMemo(() => {
+    const entries = filteredEntries.filter((e) => e.item.type === "before_after");
+    // One-off: lead with a non-catastrophe comparison so this shelf's cover
+    // photo doesn't read as another disaster scene next to the Catastrophe
+    // folder tile.
+    return [...entries].sort((a, b) => Number(a.useCase.id === "catastrophe") - Number(b.useCase.id === "catastrophe"));
+  }, [filteredEntries]);
 
   const useCaseGroups = useMemo(() => {
     return allUseCases
@@ -129,7 +132,16 @@ const Index = () => {
       tiles.push({ id: BEFORE_AFTER_GROUP, title: "Before & After", subtitle: "Change over time, side by side", entries: beforeAfterEntries });
     }
     useCaseGroups.forEach((g) => tiles.push({ id: g.useCase.id, title: g.useCase.title, subtitle: g.useCase.subtitle, entries: g.entries }));
-    return tiles;
+
+    // Each tile's cover is its first entry's thumbnail. Pick the first entry
+    // per tile whose thumbnail isn't already claimed by an earlier tile, so
+    // folders don't repeat the same cover photo across the home page.
+    const usedThumbnails = new Set<string>();
+    return tiles.map((tile) => {
+      const cover = (tile.entries.find((e) => !usedThumbnails.has(e.item.thumbnail)) ?? tile.entries[0]).item;
+      usedThumbnails.add(cover.thumbnail);
+      return { ...tile, cover };
+    });
   }, [beforeAfterEntries, useCaseGroups]);
 
   const activeTile = activeGroup ? topTiles.find((t) => t.id === activeGroup) : null;
@@ -316,7 +328,7 @@ const Index = () => {
                 style={{ animationDelay: `${i * 50}ms` }}
               >
                 <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-muted ring-1 ring-border transition-all group-hover:ring-foreground/30">
-                  <Thumbnail item={tile.entries[0].item} priority={i < 4} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
+                  <Thumbnail item={tile.cover} priority={i < 4} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
                 </div>
                 <div className="mt-4 flex items-center justify-between gap-2">
                   <h3 className="font-heading text-base font-semibold text-foreground">{tile.title}</h3>
