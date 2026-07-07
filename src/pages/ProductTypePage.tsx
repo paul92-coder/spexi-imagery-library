@@ -185,26 +185,31 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
     return out;
   }, [cfg, allUseCases]);
 
+  // API and Panorama browse by individual location rather than by parent
+  // use case, since the same location's oblique/5-view captures shouldn't
+  // be buried inside whichever use-case folder they also happen to live in.
+  const groupByLocation = type === "api" || type === "panorama";
+
   const folders = useMemo(() => {
     type EntryT = { item: MediaItem; useCase: UseCase };
     const groups: Map<string, EntryT[]> = new Map();
     for (const entry of matchingEntries) {
-      const key = type === "api" ? entry.item.title || "Untitled location" : entry.useCase.title;
+      const key = groupByLocation ? entry.item.title || "Untitled location" : entry.useCase.title;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(entry);
     }
     return Array.from(groups.entries()).map(([name, entries]) => ({ name, entries }));
-  }, [matchingEntries, type]);
+  }, [matchingEntries, groupByLocation]);
 
   const folderItems = useMemo(() => {
     if (!folder) {
-      if (type !== "api" && folders.length === 1) return folders[0].entries.map((e) => e.item);
+      if (!groupByLocation && folders.length === 1) return folders[0].entries.map((e) => e.item);
       return [];
     }
     return (folders.find((f) => f.name === folder)?.entries || []).map((e) => e.item);
-  }, [folder, folders, type]);
+  }, [folder, folders, groupByLocation]);
 
-  const showItemsInline = !folder && type !== "api" && folders.length === 1;
+  const showItemsInline = !folder && !groupByLocation && folders.length === 1;
 
   return (
     <div className="min-h-screen bg-background">
@@ -261,7 +266,7 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
             className="mt-16 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft size={16} />
-            Back to {type === "api" ? "all locations" : "all use cases"}
+            Back to {groupByLocation ? "all locations" : "all use cases"}
           </button>
         ) : (
           <Link
@@ -279,12 +284,12 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
             {folder ? (
               <>
                 <button onClick={() => { closeFolder(); setLightboxIndex(null); }} className="text-muted-foreground hover:text-foreground">
-                  {type === "api" ? "All locations" : "All use cases"}
+                  {groupByLocation ? "All locations" : "All use cases"}
                 </button>
                 <span className="text-muted-foreground"> / </span>
                 {folder}
               </>
-            ) : type === "api" ? "Browse by location" : showItemsInline ? folders[0].name : "Browse by use case"}
+            ) : groupByLocation ? "Browse by location" : showItemsInline ? folders[0].name : "Browse by use case"}
           </h2>
           {!folder && !showItemsInline && (
             <span className="text-xs text-muted-foreground">{folders.length} {folders.length === 1 ? "folder" : "folders"}</span>
