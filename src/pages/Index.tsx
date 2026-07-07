@@ -15,6 +15,7 @@ import apiHeroEast from "@/assets/api-hero-east.jpg";
 import apiHeroSouth from "@/assets/api-hero-south.jpg";
 import apiHeroWest from "@/assets/api-hero-west.jpg";
 import apiHeroAbove from "@/assets/api-hero-above.jpg";
+import productCardSplat from "@/assets/product-card-splat.jpg";
 
 const INDUSTRIES = [
   "All",
@@ -39,6 +40,13 @@ const PRODUCT_TYPES = [
   { id: "splat" as const, label: "Gaussian Splats", description: "Photoreal 3D digital twins", icon: Box, imageType: "splat" as const },
   { id: "api" as const, label: "5-View API", description: "Aerial context as an API", icon: Compass, imageType: "api" as const },
 ];
+
+// Manually-set hero images for a product card, taking priority over the
+// PRODUCT_CARD_LOCATION_TITLE lookup above (e.g. one-off photos supplied
+// directly rather than uploaded through the admin panel).
+const STATIC_PRODUCT_HERO: Partial<Record<(typeof PRODUCT_TYPES)[number]["id"], string>> = {
+  splat: productCardSplat,
+};
 
 const BEFORE_AFTER_GROUP = "before-after";
 
@@ -261,6 +269,14 @@ const Index = () => {
                 >
                   {pt.id === "api" ? (
                     <MiniApiCross />
+                  ) : STATIC_PRODUCT_HERO[pt.id] ? (
+                    <div className="aspect-[4/3] overflow-hidden">
+                      <img
+                        src={STATIC_PRODUCT_HERO[pt.id]}
+                        alt={pt.label}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
                   ) : (
                     heroItem && (
                       <div className="aspect-[4/3] overflow-hidden">
