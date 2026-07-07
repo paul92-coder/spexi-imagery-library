@@ -36,6 +36,10 @@ import chalkwellThumbVideo from "@/assets/chalkwell-thumb.mp4";
 import chalkwellVideo from "@/assets/chalkwell.mp4";
 import orthoThumb from "@/assets/ortho-thumb.jpg";
 import orthoThumbVideo from "@/assets/ortho-thumb.mp4";
+import waterPumpStationImg from "@/assets/water-pump-station.jpg";
+import railTransitStationImg from "@/assets/rail-transit-station.jpg";
+import roadSignGantryImg from "@/assets/road-sign-gantry.jpg";
+import parkWaterfrontImg from "@/assets/park-waterfront.jpg";
 
 export type MediaType = "image" | "video" | "before_after" | "orthomosaic_map" | "splat_embed" | "image_carousel";
 export type ImageType = "orthomosaic" | "oblique" | "splat" | "api";
@@ -166,6 +170,26 @@ export const useCases: UseCase[] = [
         industry: "Utilities",
         tags: ["Asset inspection", "Local Government"],
       },
+      {
+        id: "am-pump-station",
+        type: "image",
+        imageType: "oblique",
+        title: "Sapperton Pump Station",
+        thumbnail: waterPumpStationImg,
+        src: waterPumpStationImg,
+        industry: "Utilities",
+        tags: ["Asset inspection", "Local Government"],
+      },
+      {
+        id: "am-rail-transit-station",
+        type: "image",
+        imageType: "oblique",
+        title: "New Westminster SkyTrain Station",
+        thumbnail: railTransitStationImg,
+        src: railTransitStationImg,
+        industry: "Local Government",
+        tags: ["Asset inspection", "Utilities"],
+      },
     ],
   },
   {
@@ -255,6 +279,56 @@ export const useCases: UseCase[] = [
         afterSrc: skylineAfterImg,
         industry: "Local Government",
         tags: ["Before & After", "Progress tracking"],
+      },
+      {
+        id: "gov-sign-gantry",
+        type: "image",
+        imageType: "oblique",
+        title: "Highway Sign Gantry – Winter Park, FL",
+        thumbnail: roadSignGantryImg,
+        src: roadSignGantryImg,
+        industry: "Local Government",
+        tags: ["Asset inspection"],
+      },
+      {
+        id: "gov-park-waterfront",
+        type: "image",
+        imageType: "oblique",
+        title: "New Brighton Park Waterfront",
+        thumbnail: parkWaterfrontImg,
+        src: parkWaterfrontImg,
+        industry: "Local Government",
+        tags: ["Site monitoring"],
+      },
+      {
+        id: "gov-pump-station",
+        type: "image",
+        imageType: "oblique",
+        title: "Sapperton Pump Station",
+        thumbnail: waterPumpStationImg,
+        src: waterPumpStationImg,
+        industry: "Utilities",
+        tags: ["Asset inspection", "Local Government"],
+      },
+      {
+        id: "gov-rail-transit-station",
+        type: "image",
+        imageType: "oblique",
+        title: "New Westminster SkyTrain Station",
+        thumbnail: railTransitStationImg,
+        src: railTransitStationImg,
+        industry: "Local Government",
+        tags: ["Asset inspection", "Utilities"],
+      },
+      {
+        id: "gov-water-treatment",
+        type: "image",
+        imageType: "oblique",
+        title: "Water Treatment Plant",
+        thumbnail: waterTreatmentImg,
+        src: waterTreatmentImg,
+        industry: "Utilities",
+        tags: ["Asset inspection", "Local Government"],
       },
     ],
   },
@@ -361,6 +435,42 @@ export const useCases: UseCase[] = [
     subtitle: "Structural condition monitoring from above",
     coverImage: constructionSite1Img,
     items: [],
+  },
+  {
+    id: "road-traffic-infrastructure",
+    title: "Road & Traffic Infrastructure",
+    subtitle: "Highways, signage, and public works monitoring",
+    coverImage: roadSignGantryImg,
+    items: [
+      {
+        id: "road-sign-gantry",
+        type: "image",
+        imageType: "oblique",
+        title: "Highway Sign Gantry – Winter Park, FL",
+        thumbnail: roadSignGantryImg,
+        src: roadSignGantryImg,
+        industry: "Local Government",
+        tags: ["Asset inspection"],
+      },
+    ],
+  },
+  {
+    id: "parks-recreation",
+    title: "Parks & Recreation",
+    subtitle: "Municipal green space and amenity monitoring",
+    coverImage: parkWaterfrontImg,
+    items: [
+      {
+        id: "park-waterfront",
+        type: "image",
+        imageType: "oblique",
+        title: "New Brighton Park Waterfront",
+        thumbnail: parkWaterfrontImg,
+        src: parkWaterfrontImg,
+        industry: "Local Government",
+        tags: ["Site monitoring"],
+      },
+    ],
   },
   // The following are placeholder folders with no seeded imagery yet — kept
   // empty until real captures exist. Index.tsx already hides any use case
