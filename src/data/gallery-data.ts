@@ -31,9 +31,6 @@ import splatVancouverThumb from "@/assets/splat-vancouver-thumb.jpg";
 import splatVancouverThumbVideo from "@/assets/splat-vancouver-thumb.mp4";
 import splatPropertyThumb from "@/assets/splat-property-thumb.jpg";
 import splatPropertyThumbVideo from "@/assets/splat-property-thumb.mp4";
-import chalkwellThumb from "@/assets/chalkwell-thumb.jpg";
-import chalkwellThumbVideo from "@/assets/chalkwell-thumb.mp4";
-import chalkwellVideo from "@/assets/chalkwell.mp4";
 import orthoThumb from "@/assets/ortho-thumb.jpg";
 import orthoThumbVideo from "@/assets/ortho-thumb.mp4";
 import waterPumpStationImg from "@/assets/water-pump-station.jpg";
@@ -415,17 +412,6 @@ export const useCases: UseCase[] = [
           "https://lumalabs.ai/embed/23706a92-f334-4f84-91e2-41ffa6723a9a?mode=sparkles&background=%23000000&color=%23ffffff&showTitle=false&loadBg=true&logoPosition=bottom-left&infoPosition=bottom-right&showMenu=false&autoplay=1",
         industry: "Spatial / Physical AI",
         tags: ["Training data", "Scene recognition"],
-      },
-      {
-        id: "i3d-video-1",
-        type: "video",
-        imageType: "splat",
-        title: "Chalkwell – 3D Flythrough",
-        thumbnail: chalkwellThumb,
-        thumbnailVideo: chalkwellThumbVideo,
-        videoSrc: chalkwellVideo,
-        industry: "Spatial / Physical AI",
-        tags: ["Scene recognition"],
       },
     ],
   },

@@ -11,6 +11,12 @@ import { cn } from "@/lib/utils";
 
 type ProductType = "splat" | "ortho" | "panorama" | "api";
 
+// Pins a specific entry (by title) as the hero showcase for a product type,
+// taking priority over the default "first matching entry" pick below.
+const PREFERRED_HERO_TITLE: Partial<Record<ProductType, string>> = {
+  splat: "City Scene",
+};
+
 const DIRECTION_LABELS: Record<string, string> = {
   north: "North",
   east: "East",
@@ -560,8 +566,10 @@ function HeroShowcase({ entries, type }: { entries: { item: MediaItem; useCase: 
       </div>
     );
   }
-  const hero = entries[0]?.item;
-  const thumbs = entries.slice(1, 5).map((e) => e.item);
+  const preferredTitle = PREFERRED_HERO_TITLE[type];
+  const preferredIndex = preferredTitle ? entries.findIndex((e) => e.item.title === preferredTitle) : -1;
+  const hero = (preferredIndex >= 0 ? entries[preferredIndex] : entries[0])?.item;
+  const thumbs = entries.filter((_, i) => i !== (preferredIndex >= 0 ? preferredIndex : 0)).slice(0, 4).map((e) => e.item);
   if (!hero) return null;
   return (
     <div className="relative mt-8 lg:mt-0">
