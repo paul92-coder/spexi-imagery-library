@@ -75,8 +75,10 @@ const DIRECTION_TAGS = ["north", "east", "south", "west", "above"] as const;
 
 // The home-page folder an item lives in — distinct from the free-text
 // "Use case" tag below, which is just a purpose label (e.g. "Progress
-// tracking") and doesn't affect where an item is displayed.
-const FOLDER_OPTIONS = baseUseCases.map((uc) => ({ id: uc.id, title: uc.title }));
+// tracking") and doesn't affect where an item is displayed. Admin-created
+// folders come from useMediaOverrides (see NEW_FOLDER_VALUE below), so the
+// full option list is built per-render, not statically here.
+const NEW_FOLDER_VALUE = "__new__";
 
 type FolderId = "splat" | "ortho" | "panorama" | "api" | "other";
 const FOLDERS: { id: FolderId; label: string; match: (r: Row) => boolean }[] = [
@@ -89,7 +91,26 @@ const FOLDERS: { id: FolderId; label: string; match: (r: Row) => boolean }[] = [
 
 const Admin = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
-  const { overrides, uploads, folderSettings, refresh } = useMediaOverrides();
+  const { overrides, uploads, folderSettings, useCases, refresh, createFolder } = useMediaOverrides();
+  const folderOptions = useMemo(() => useCases.map((uc) => ({ id: uc.id, title: uc.title })), [useCases]);
+
+  // Handles the "+ Add new folder…" option shared by both folder <select>s:
+  // prompts for a name, creates it, then applies its id via `apply`.
+  const handleFolderSelect = async (value: string, apply: (id: string) => void) => {
+    if (value !== NEW_FOLDER_VALUE) {
+      apply(value);
+      return;
+    }
+    const title = window.prompt("New folder name (this becomes a home page section):");
+    if (!title || !title.trim()) return;
+    try {
+      const id = await createFolder(title);
+      apply(id);
+      toast({ title: `Created folder "${title.trim()}"` });
+    } catch (e: any) {
+      toast({ title: "Couldn't create folder", description: e.message, variant: "destructive" });
+    }
+  };
   const [rows, setRows] = useState<Row[]>([]);
   const [tagDraft, setTagDraft] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
@@ -464,10 +485,11 @@ const Admin = () => {
                   <label className="block text-xs text-muted-foreground mb-1">Folder</label>
                   <select
                     value={upFolder}
-                    onChange={(e) => setUpFolder(e.target.value)}
+                    onChange={(e) => handleFolderSelect(e.target.value, setUpFolder)}
                     className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                   >
-                    {FOLDER_OPTIONS.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
+                    {folderOptions.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
+                    <option value={NEW_FOLDER_VALUE}>+ Add new folder…</option>
                   </select>
                 </div>
                 <div>
@@ -638,7 +660,7 @@ const Admin = () => {
                 Hide a folder from the home page grid without deleting its content — it stays reachable via its own page and product-type/industry filters.
               </p>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {FOLDER_OPTIONS.map((f) => {
+                {folderOptions.map((f) => {
                   const baseUc = baseUseCases.find((uc) => uc.id === f.id);
                   const codeHidden = !!baseUc?.hideFromHome;
                   const hidden = codeHidden || !!folderSettings[f.id]?.hidden;
@@ -747,10 +769,11 @@ const Admin = () => {
                       <div>
                         <select
                           value={r.folderId}
-                          onChange={(e) => setFolder(r, e.target.value)}
+                          onChange={(e) => handleFolderSelect(e.target.value, (id) => setFolder(r, id))}
                           className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
                         >
-                          {FOLDER_OPTIONS.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
+                          {folderOptions.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
+                          <option value={NEW_FOLDER_VALUE}>+ Add new folder…</option>
                         </select>
                       </div>
                     )}

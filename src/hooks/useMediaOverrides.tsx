@@ -32,6 +32,12 @@ export interface FolderSetting {
   hidden: boolean;
 }
 
+export interface CustomFolder {
+  id: string;
+  title: string;
+  subtitle: string | null;
+}
+
 interface OverridesContextValue {
   overrides: Record<string, MediaOverride>;
   useCases: UseCase[];
@@ -39,6 +45,10 @@ interface OverridesContextValue {
   folderSettings: Record<string, FolderSetting>;
   loading: boolean;
   refresh: () => Promise<void>;
+  // Admin-created folders (see custom_folders table) that don't exist in the
+  // static gallery-data.ts seed. Slugifies the title into an id, unique
+  // against every existing base + custom folder id, and returns it.
+  createFolder: (title: string, subtitle?: string) => Promise<string>;
 }
 
 const OverridesContext = createContext<OverridesContextValue | null>(null);
@@ -149,6 +159,7 @@ export const MediaOverridesProvider = ({ children }: { children: ReactNode }) =>
   const [uploads, setUploads] = useState<MediaUpload[]>([]);
   const [uploadItems, setUploadItems] = useState<MediaItem[]>([]);
   const [folderSettings, setFolderSettings] = useState<Record<string, FolderSetting>>({});
+  const [customFolders, setCustomFolders] = useState<CustomFolder[]>([]);
   const [loading, setLoading] = useState(true);
 
   const signedUrl = async (path: string) => {
@@ -170,18 +181,22 @@ export const MediaOverridesProvider = ({ children }: { children: ReactNode }) =>
   };
 
   const refresh = async () => {
-    const [ovRes, upRes, folderRes] = await Promise.all([
+    const [ovRes, upRes, folderRes, customFolderRes] = await Promise.all([
       supabase.from("media_overrides").select("media_id,title,category,tags,industry,imagery_type,use_case"),
       supabase
         .from("media_uploads")
         .select("id,use_case_id,media_type,storage_path,thumbnail_path,preview_path,title,category,tags,industry,imagery_type,use_case")
         .order("created_at", { ascending: false }),
       supabase.from("folder_settings").select("folder_id,hidden"),
+      supabase.from("custom_folders").select("id,title,subtitle").order("created_at", { ascending: true }),
     ]);
     if (!ovRes.error && ovRes.data) {
       const map: Record<string, MediaOverride> = {};
       for (const row of ovRes.data) map[row.media_id] = row as MediaOverride;
       setOverrides(map);
+    }
+    if (!customFolderRes.error && customFolderRes.data) {
+      setCustomFolders(customFolderRes.data as CustomFolder[]);
     }
     if (!folderRes.error && folderRes.data) {
       const map: Record<string, FolderSetting> = {};
@@ -242,7 +257,21 @@ export const MediaOverridesProvider = ({ children }: { children: ReactNode }) =>
       const key = uploads.find((u) => `upload-${u.id}` === it.id)?.use_case_id ?? "uploads";
       (byUseCase[key] ||= []).push(it);
     }
-    return baseUseCases.map((uc) => ({
+    // Admin-created folders (custom_folders table) start empty and sit
+    // alongside the static gallery-data.ts seed — they only need a cover once
+    // an upload lands in them, which the tile-cover logic on the home page
+    // already derives from the first item's thumbnail.
+    const allBaseUseCases: UseCase[] = [
+      ...baseUseCases,
+      ...customFolders.map((cf) => ({
+        id: cf.id,
+        title: cf.title,
+        subtitle: cf.subtitle ?? undefined,
+        coverImage: "",
+        items: [],
+      })),
+    ];
+    return allBaseUseCases.map((uc) => ({
       ...uc,
       // A folder can be hidden either in code (permanent, e.g. Uploads) or
       // live via the Admin panel's Folders toggle — either one hides it.
@@ -252,10 +281,21 @@ export const MediaOverridesProvider = ({ children }: { children: ReactNode }) =>
         ...(byUseCase[uc.id] ?? []),
       ])),
     }));
-  }, [overrides, uploadItems, uploads, folderSettings]);
+  }, [overrides, uploadItems, uploads, folderSettings, customFolders]);
+
+  const createFolder = async (title: string, subtitle?: string) => {
+    const existingIds = new Set(useCases.map((uc) => uc.id));
+    const slug = title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-+|-+$)/g, "") || "folder";
+    let id = slug;
+    for (let n = 2; existingIds.has(id); n++) id = `${slug}-${n}`;
+    const { error } = await supabase.from("custom_folders").insert({ id, title: title.trim(), subtitle: subtitle?.trim() || null });
+    if (error) throw error;
+    await refresh();
+    return id;
+  };
 
   return (
-    <OverridesContext.Provider value={{ overrides, useCases, uploads, folderSettings, loading, refresh }}>
+    <OverridesContext.Provider value={{ overrides, useCases, uploads, folderSettings, loading, refresh, createFolder }}>
       {children}
     </OverridesContext.Provider>
   );
