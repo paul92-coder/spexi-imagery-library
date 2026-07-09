@@ -237,26 +237,37 @@ const Index = () => {
 
             <div className="h-6 w-px bg-border" />
             <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Becomes</span>
-            <div className="h-6 w-px bg-border" />
+            <div className="h-6 w-px bg-border md:hidden" />
 
-            <div className="flex w-full max-w-xs flex-col gap-3">
+            {/* Branch connector: one line splitting into three, aligned to the
+                card grid below via matching grid-cols-3 tracks (no JS measurement). */}
+            <div className="mt-6 hidden w-full max-w-3xl md:block">
+              <div className="h-px w-full bg-border" />
+              <div className="grid grid-cols-3">
+                {PRODUCT_TYPES.slice(1).map((pt) => (
+                  <div key={pt.id} className="flex justify-center">
+                    <div className="h-6 w-px bg-border" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-0 grid w-full max-w-xs grid-cols-1 gap-3 md:max-w-3xl md:grid-cols-3">
               {PRODUCT_TYPES.slice(1).map((pt) => (
                 <Link
                   key={pt.id}
                   to={`/product-type/${pt.id}`}
-                  className="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/40 hover:bg-card/80"
+                  className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card px-4 py-4 text-center transition-colors hover:border-primary/40 hover:bg-card/80"
                 >
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <pt.icon size={18} />
                   </span>
-                  <span className="flex-1">
-                    <span className="block text-sm font-semibold text-foreground">{pt.label}</span>
-                    <span className="block text-xs text-muted-foreground">{pt.description}</span>
+                  <span className="block text-sm font-semibold text-foreground">{pt.label}</span>
+                  <span className="block text-xs text-muted-foreground">{pt.description}</span>
+                  <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                    View product
+                    <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
                   </span>
-                  <ArrowRight
-                    size={14}
-                    className="shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary"
-                  />
                 </Link>
               ))}
             </div>
