@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import LightboxViewer from "@/components/LightboxViewer";
 import Thumbnail from "@/components/Thumbnail";
 import { useMediaOverrides } from "@/hooks/useMediaOverrides";
@@ -66,7 +67,8 @@ const UseCasePage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-6 pt-28 pb-20">
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
+        <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: useCase.title }]} />
+        <Link to="/" className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
           <ArrowLeft size={16} />
           Back to Library
         </Link>

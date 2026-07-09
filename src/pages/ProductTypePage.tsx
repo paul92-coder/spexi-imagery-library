@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Layers, Zap, Globe2, Sparkles, Box, Map as MapIcon, Compass, MapPin, Code2, Workflow, ChevronDown } from "lucide-react";
 import Header from "@/components/Header";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import Thumbnail from "@/components/Thumbnail";
 import LightboxViewer from "@/components/LightboxViewer";
 import { type MediaItem, type UseCase } from "@/data/gallery-data";
@@ -215,6 +216,11 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
     if (type !== "api" && folder && folderItems.length === 1) setLightboxIndex(0);
   }, [type, folder, folderItems]);
 
+  const productLabel = cfg.badge.replace(/^Spexi\s+/, "");
+  const breadcrumbItems = folder
+    ? [{ label: "Home", to: "/" }, { label: productLabel, to: `/product-type/${type}` }, { label: folder }]
+    : [{ label: "Home", to: "/" }, { label: productLabel }];
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -224,6 +230,7 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
       </div>
 
       <main className="relative mx-auto w-full max-w-[1500px] px-4 pt-24 pb-16 sm:px-6">
+        <Breadcrumbs items={breadcrumbItems} />
         {!folder && (
           <>
             <div className="mt-6 lg:grid lg:grid-cols-2 lg:gap-10 lg:items-start">
