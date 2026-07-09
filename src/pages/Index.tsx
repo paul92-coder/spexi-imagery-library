@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation, useSearchParams, Link } from "react-router-dom";
-import { Box, Map as MapIcon, Globe2, Compass, ArrowLeft } from "lucide-react";
+import { Box, Map as MapIcon, Globe2, Compass, ArrowLeft, Calendar } from "lucide-react";
 import Header from "@/components/Header";
 import LightboxViewer from "@/components/LightboxViewer";
 import Thumbnail from "@/components/Thumbnail";
@@ -235,9 +235,9 @@ const Index = () => {
         </section>
 
         <section className="mt-16 grid gap-10 border-t border-border/60 pt-12 md:grid-cols-3 md:gap-12">
-          <WorkflowStep step="01" title="Subscribe to recurring change" />
-          <WorkflowStep step="02" title="Task collections" />
-          <WorkflowStep step="03" title="Build world models" />
+          <WorkflowStep step="01" title="Subscribe to recurring change" icon={<Calendar size={26} strokeWidth={1.25} />} />
+          <WorkflowStep step="02" title="Task collections" icon={<DroneIcon size={26} strokeWidth={1.25} />} />
+          <WorkflowStep step="03" title="Build world models" icon={<MapIcon size={26} strokeWidth={1.25} />} />
         </section>
 
         <section className="mt-16 border-t border-border/60 pt-12">
@@ -441,11 +441,39 @@ function MiniApiCross() {
   );
 }
 
-function WorkflowStep({ step, title }: { step: string; title: string }) {
+function WorkflowStep({ step, title, icon }: { step: string; title: string; icon: React.ReactNode }) {
   return (
-    <div className="flex gap-5">
+    <div className="flex items-center gap-4">
       <span className="text-3xl font-extrabold text-primary/40">{step}</span>
+      <span className="text-white/90">{icon}</span>
       <h3 className="text-base font-semibold text-foreground">{title}</h3>
     </div>
+  );
+}
+
+// Lucide doesn't ship a drone glyph in the pinned version here, so this
+// hand-drawn line icon matches its 24x24 stroke style (body + 4 rotor arms).
+function DroneIcon({ size = 24, strokeWidth = 2 }: { size?: number; strokeWidth?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="9" y="9" width="6" height="6" rx="1" />
+      <path d="M9 9 4 4" />
+      <path d="M15 9l5-5" />
+      <path d="M9 15l-5 5" />
+      <path d="M15 15l5 5" />
+      <circle cx="3.5" cy="3.5" r="2" />
+      <circle cx="20.5" cy="3.5" r="2" />
+      <circle cx="3.5" cy="20.5" r="2" />
+      <circle cx="20.5" cy="20.5" r="2" />
+    </svg>
   );
 }
