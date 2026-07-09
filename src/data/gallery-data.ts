@@ -6,27 +6,16 @@ import realEstateImg from "@/assets/real-estate.jpg";
 
 import wildfireBeforeImg from "@/assets/wildfire-before.webp";
 import wildfireAfterImg from "@/assets/wildfire-after.webp";
-import floodingImg from "@/assets/flooding.webp";
-import flooding2Img from "@/assets/flooding-2.webp";
-import flooding3Img from "@/assets/flooding-3.webp";
 import constructionBeforeImg from "@/assets/construction-before.webp";
 import constructionAfterImg from "@/assets/construction-after.webp";
 import constructionSite1Img from "@/assets/construction-site-1.webp";
-import constructionSite2Img from "@/assets/construction-site-2.webp";
 import utilitiesBeforeImg from "@/assets/utilities-before.webp";
 import utilitiesAfterImg from "@/assets/utilities-after.webp";
 import foliageBeforeImg from "@/assets/foliage-before.webp";
 import foliageAfterImg from "@/assets/foliage-after.webp";
 import skylineBeforeImg from "@/assets/skyline-before.webp";
 import skylineAfterImg from "@/assets/skyline-after.webp";
-import assetMgmt1Img from "@/assets/asset-mgmt-1.webp";
-import assetMgmt2Img from "@/assets/asset-mgmt-2.webp";
-import assetMgmt3Img from "@/assets/asset-mgmt-3.webp";
-import waterTreatmentImg from "@/assets/water-treatment.webp";
 import solarPanelsImg from "@/assets/solar-panels.webp";
-import realEstate1Img from "@/assets/real-estate-1.webp";
-import realEstate2Img from "@/assets/real-estate-2.webp";
-import realEstate3Img from "@/assets/real-estate-3.webp";
 import splatVancouverThumb from "@/assets/splat-vancouver-thumb.jpg";
 import splatVancouverThumbVideo from "@/assets/splat-vancouver-thumb.mp4";
 import splatPropertyThumb from "@/assets/splat-property-thumb.jpg";
@@ -105,20 +94,6 @@ export const useCases: UseCase[] = [
         industry: "Insurance",
         tags: ["Before & After", "Catastrophe", "Local Government"],
       },
-      {
-        id: "cat-flood-overview",
-        type: "image_carousel",
-        imageType: "oblique",
-        title: "Abbotsford Flood – Dec 2025",
-        thumbnail: floodingImg,
-        images: [
-          { src: floodingImg, title: "Abbotsford Flood – Dec 2025" },
-          { src: flooding2Img, title: "Abbotsford Flood 2 – Dec 2025" },
-          { src: flooding3Img, title: "Abbotsford Flood 3 – Dec 2025" },
-        ],
-        industry: "Insurance",
-        tags: ["Catastrophe", "Local Government"],
-      },
     ],
   },
   {
@@ -127,46 +102,6 @@ export const useCases: UseCase[] = [
     subtitle: "Infrastructure inspection & monitoring",
     coverImage: assetMgmtImg,
     items: [
-      {
-        id: "am-overview",
-        type: "image",
-        imageType: "oblique",
-        title: "Substation Asset Management",
-        thumbnail: assetMgmt1Img,
-        src: assetMgmt1Img,
-        industry: "Utilities",
-        tags: ["Asset Management", "Asset inspection", "Local Government"],
-      },
-      {
-        id: "am-water",
-        type: "image",
-        imageType: "oblique",
-        title: "Water Treatment Plant",
-        thumbnail: waterTreatmentImg,
-        src: waterTreatmentImg,
-        industry: "Utilities",
-        tags: ["Asset inspection", "Local Government"],
-      },
-      {
-        id: "am-equipment-yard",
-        type: "image",
-        imageType: "oblique",
-        title: "Equipment Yard Overview",
-        thumbnail: assetMgmt2Img,
-        src: assetMgmt2Img,
-        industry: "Utilities",
-        tags: ["Asset inspection", "Local Government"],
-      },
-      {
-        id: "am-fleet-storage",
-        type: "image",
-        imageType: "oblique",
-        title: "Fleet & Storage Facility",
-        thumbnail: assetMgmt3Img,
-        src: assetMgmt3Img,
-        industry: "Utilities",
-        tags: ["Asset inspection", "Local Government"],
-      },
       {
         id: "am-pump-station",
         type: "image",
@@ -205,36 +140,6 @@ export const useCases: UseCase[] = [
         afterSrc: constructionAfterImg,
         industry: "Construction, Engineering, Architecture",
         tags: ["Before & After", "Progress tracking", "Local Government"],
-      },
-      {
-        id: "con-overview",
-        type: "image",
-        imageType: "oblique",
-        title: "Construction Site Overview Miami",
-        thumbnail: constructionSite1Img,
-        src: constructionSite1Img,
-        industry: "Construction, Engineering, Architecture",
-        tags: ["Construction Site Overview", "Progress tracking", "Local Government"],
-      },
-      {
-        id: "con-nissan-stadium",
-        type: "image",
-        imageType: "oblique",
-        title: "Nissan Stadium Progress Tennessee",
-        thumbnail: constructionSite2Img,
-        src: constructionSite2Img,
-        industry: "Construction, Engineering, Architecture",
-        tags: ["Progress tracking", "Local Government"],
-      },
-      {
-        id: "con-luxury-estate",
-        type: "image",
-        imageType: "oblique",
-        title: "Luxury Estate Development Miami Beach",
-        thumbnail: realEstate2Img,
-        src: realEstate2Img,
-        industry: "Construction, Engineering, Architecture",
-        tags: ["Progress tracking", "Local Government"],
       },
     ],
   },
@@ -276,16 +181,6 @@ export const useCases: UseCase[] = [
         afterSrc: skylineAfterImg,
         industry: "Local Government",
         tags: ["Before & After", "Progress tracking"],
-      },
-      {
-        id: "gov-water-treatment",
-        type: "image",
-        imageType: "oblique",
-        title: "Water Treatment Plant",
-        thumbnail: waterTreatmentImg,
-        src: waterTreatmentImg,
-        industry: "Utilities",
-        tags: ["Asset inspection", "Local Government"],
       },
       {
         id: "gov-pump-station",
@@ -334,28 +229,7 @@ export const useCases: UseCase[] = [
     title: "Real Estate – Property Intelligence",
     subtitle: "Premium property perspectives",
     coverImage: realEstateImg,
-    items: [
-      {
-        id: "re-1",
-        type: "image",
-        imageType: "oblique",
-        title: "Waterfront Properties",
-        thumbnail: realEstate1Img,
-        src: realEstate1Img,
-        industry: "Commercial Real Estate",
-        tags: ["Property condition review", "Local Government"],
-      },
-      {
-        id: "re-3",
-        type: "image",
-        imageType: "oblique",
-        title: "Residential Neighborhood",
-        thumbnail: realEstate3Img,
-        src: realEstate3Img,
-        industry: "Commercial Real Estate",
-        tags: ["Residential Neighborhood", "Local Government"],
-      },
-    ],
+    items: [],
   },
   {
     id: "orthomosaic",
@@ -495,18 +369,7 @@ export const useCases: UseCase[] = [
     title: "Wind & Solar Farm Asset Monitoring",
     subtitle: "Utility-scale generation site inspection",
     coverImage: solarPanelsImg,
-    items: [
-      {
-        id: "am-solar-panels",
-        type: "image",
-        imageType: "oblique",
-        title: "Solar Panel Array",
-        thumbnail: solarPanelsImg,
-        src: solarPanelsImg,
-        industry: "Utilities",
-        tags: ["Asset inspection", "Local Government"],
-      },
-    ],
+    items: [],
   },
   {
     id: "utilities-tower-infrastructure",
