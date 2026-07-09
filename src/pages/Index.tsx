@@ -24,7 +24,6 @@ const INDUSTRIES = [
   "Local Government",
   "Utilities",
   "Insurance",
-  "Finance",
   "Commercial Real Estate",
   "Spatial / Physical AI",
 ] as const;
@@ -212,11 +211,10 @@ const Index = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/40" />
           <div className="relative z-10 px-4 pt-20 pb-16 sm:px-6 sm:pt-24 sm:pb-20">
             <div className="max-w-5xl">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Spexi Image Gallery</p>
-              <h1 className="mt-6 font-heading text-5xl font-extrabold leading-[0.95] tracking-tighter text-foreground break-words sm:text-7xl lg:text-8xl">
-                <span className="block">The World,</span>
+              <h1 className="font-heading text-5xl font-extrabold leading-[0.95] tracking-tighter text-foreground break-words sm:text-7xl lg:text-8xl">
+                <span className="block">Spexi</span>
                 <span className="block bg-gradient-to-br from-primary/90 via-primary to-primary/70 bg-clip-text text-transparent">
-                  Standardized.
+                  Image Gallery
                 </span>
               </h1>
               <p className="mt-6 max-w-2xl text-base font-light leading-relaxed text-muted-foreground sm:text-xl">
@@ -303,7 +301,7 @@ const Index = () => {
         </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-          {INDUSTRIES.map((ind) => {
+          {INDUSTRIES.filter((ind) => ind !== "All").map((ind) => {
             const active = industry === ind;
             return (
               <button
