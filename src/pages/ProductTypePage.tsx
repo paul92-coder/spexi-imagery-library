@@ -72,23 +72,17 @@ interface ProductConfig {
 const PRODUCTS: Record<ProductType, ProductConfig> = {
   splat: {
     badge: "Spexi Gaussian Splats",
-    title: "Photoreal 3D, built from the sky.",
-    subtitle:
-      "Orbit, fly through, and measure entire sites in interactive 3D. Spexi Gaussian Splats turn a single capture into a photoreal digital twin your team can explore from any angle — no specialized hardware required.",
+    title: "Realistic, measurable world models.",
+    subtitle: "Generate gaussian splats using Spexi imagery. Create realistic and measurable world models.",
     icon: <Box size={12} />,
-    features: [
-      { title: "Interactive", body: "Orbit, pan, and zoom in real time.", icon: <Sparkles size={14} /> },
-      { title: "Photoreal", body: "Lighting and materials preserved.", icon: <Layers size={14} /> },
-      { title: "Web-ready", body: "Embed anywhere with a single link.", icon: <Globe2 size={14} /> },
-      { title: "Scalable", body: "From a single site to a full portfolio.", icon: <Zap size={14} /> },
-    ],
+    features: [],
     match: (i) => i.imageType === "splat",
   },
   ortho: {
     badge: "Spexi Orthomosaics",
-    title: "Survey-grade maps, on your schedule.",
+    title: "Site-specific orthos.",
     subtitle:
-      "Geo-referenced, high-resolution orthomosaic maps you can pan, zoom, and measure on. Spexi pilots capture and stitch them so your team gets a clean basemap without the field work.",
+      "High-resolution orthomosaics, available for flexible tasking for project sites, ready for site-specific GIS workflows.",
     icon: <MapIcon size={12} />,
     features: [
       { title: "Geo-accurate", body: "Aligned to real-world coordinates.", icon: <Compass size={14} /> },
@@ -107,16 +101,13 @@ const PRODUCTS: Record<ProductType, ProductConfig> = {
     features: [
       { title: "Immersive", body: "Look in any direction from above.", icon: <Sparkles size={14} /> },
       { title: "High clarity", body: "Crisp detail across the full sphere.", icon: <Layers size={14} /> },
-      { title: "Shareable", body: "Send a link, get instant context.", icon: <Globe2 size={14} /> },
-      { title: "Repeatable", body: "Same vantage, every visit.", icon: <Zap size={14} /> },
     ],
     match: (i) => i.imageType === "oblique",
   },
   api: {
-    badge: "Spexi 5-View API",
-    title: "Aerial context, as an API.",
-    subtitle:
-      "Drop coordinates into your stack and get back five calibrated perspectives of any address — wired directly into your product, your underwriting flow, or your field ops dashboard.",
+    badge: "Spexi Static Images",
+    title: "Aerial context, as static images.",
+    subtitle: "Filtered static images from multiple angles and orientations.",
     icon: <Compass size={12} />,
     features: [
       { title: "REST + JSON", body: "One endpoint. Bearer auth. Predictable schema.", icon: <Code2 size={14} /> },
@@ -268,8 +259,6 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
                 <ChevronDown size={20} className="text-muted-foreground" />
               </div>
             </div>
-
-            {type === "api" && <ApiDetails />}
           </>
         )}
 
@@ -385,22 +374,6 @@ const ProductTypePageInner = ({ type, cfg }: { type: ProductType; cfg: ProductCo
 
 export default ProductTypePage;
 
-const HOW_TO_USE = [
-  { step: "01", title: "Authenticate", body: "Generate an API key from your Spexi workspace and include it as a bearer token." },
-  { step: "02", title: "Send coordinates", body: "POST a lat/lng or street address. We resolve it to the nearest verified capture." },
-  { step: "03", title: "Receive five views", body: "Get back signed URLs for north, east, south, west and above — ready to render." },
-];
-
-const INDUSTRIES_LIST = [
-  "Insurance",
-  "Commercial Real Estate",
-  "Local Government",
-  "Utilities",
-  "Construction, Engineering & Architecture",
-  "Finance",
-  "Spatial / Physical AI",
-];
-
 // The 5-View API page shows a location's views arranged as a N/E/S/W/Above
 // cross as soon as its folder opens — no extra click into a generic grid.
 // This is deliberately API-page-only: the same underlying images are also
@@ -502,54 +475,6 @@ function ApiSampleGrid({ entries }: { entries: { item: MediaItem; useCase: UseCa
         )}
       </div>
     </div>
-  );
-}
-
-function ApiDetails() {
-  return (
-    <section className="mt-16 space-y-12">
-      <div>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Sample response</span>
-        <h3 className="mt-2 font-heading text-2xl font-semibold text-foreground sm:text-3xl">One request. Five calibrated angles.</h3>
-        <p className="mt-3 max-w-md text-sm text-muted-foreground">
-          Every response returns the same five perspectives so your UI, models, and analysts always know what
-          they're looking at — no matter where in the country the capture came from.
-        </p>
-        <pre className="mt-4 overflow-x-auto rounded-xl border border-border bg-card/60 p-4 font-mono text-xs text-foreground/90 backdrop-blur-sm">
-{`POST /v1/5-view
-{ "lat": 25.7741, "lng": -80.1936 }
-
-→ { north, east, south, west, above }`}
-        </pre>
-      </div>
-
-      <div>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">How to use</span>
-        <h3 className="mt-2 font-heading text-2xl font-semibold text-foreground sm:text-3xl">From coordinates to imagery in three steps.</h3>
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {HOW_TO_USE.map((s) => (
-            <div key={s.step} className="rounded-xl border border-border bg-card/40 p-5 backdrop-blur-sm">
-              <span className="font-mono text-xs text-primary">{s.step}</span>
-              <h4 className="mt-2 font-heading text-base font-semibold text-foreground">{s.title}</h4>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Built for</span>
-        <h3 className="mt-2 font-heading text-2xl font-semibold text-foreground sm:text-3xl">Teams that need verified ground truth.</h3>
-        <p className="mt-3 max-w-2xl text-sm text-muted-foreground">Used by product, underwriting, and operations teams across:</p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {INDUSTRIES_LIST.map((label) => (
-            <span key={label} className="rounded-full border border-border bg-card/60 px-3 py-1.5 text-xs font-medium text-foreground">
-              {label}
-            </span>
-          ))}
-        </div>
-      </div>
-    </section>
   );
 }
 

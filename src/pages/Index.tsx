@@ -35,10 +35,10 @@ type Industry = (typeof INDUSTRIES)[number];
 const PRODUCT_CARD_LOCATION_TITLE = "";
 
 const PRODUCT_TYPES = [
-  { id: "ortho" as const, label: "Orthomosaics", description: "Survey-grade geo-referenced maps", icon: MapIcon, imageType: "orthomosaic" as const },
+  { id: "ortho" as const, label: "Orthomosaics", description: "Site-specific geo-referenced maps", icon: MapIcon, imageType: "orthomosaic" as const },
   { id: "panorama" as const, label: "360° Panoramas", description: "Immersive aerial perspectives", icon: Globe2, imageType: "oblique" as const },
   { id: "splat" as const, label: "Gaussian Splats", description: "Photoreal 3D digital twins", icon: Box, imageType: "splat" as const },
-  { id: "api" as const, label: "5-View API", description: "Aerial context as an API", icon: Compass, imageType: "api" as const },
+  { id: "api" as const, label: "Static Images", description: "Filtered static images from multiple angles", icon: Compass, imageType: "api" as const },
 ];
 
 // Manually-set hero images for a product card, taking priority over the
