@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation, useSearchParams, Link } from "react-router-dom";
-import { Box, Map as MapIcon, Globe2, Compass, ArrowLeft, Calendar } from "lucide-react";
+import { Box, Map as MapIcon, Globe2, Compass, ArrowLeft, ArrowRight, Calendar } from "lucide-react";
 import Header from "@/components/Header";
 import LightboxViewer from "@/components/LightboxViewer";
 import Thumbnail from "@/components/Thumbnail";
@@ -211,47 +211,53 @@ const Index = () => {
             Every capture starts as static images — and becomes orthomosaics, panoramas, and splats.
           </p>
 
-          <div className="mt-10 flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:justify-center lg:gap-0">
+          <div className="mt-10 flex flex-col items-center">
             <div className="flex flex-col items-center gap-2">
               <div className="flex h-16 w-16 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary">
                 <DroneIcon size={28} strokeWidth={1.25} />
               </div>
               <span className="text-xs font-semibold text-foreground">One flight</span>
-              <span className="max-w-[8rem] text-center text-[11px] text-muted-foreground">Single autonomous capture</span>
+              <span className="max-w-[10rem] text-center text-[11px] text-muted-foreground">Single autonomous capture</span>
             </div>
 
-            <div className="hidden h-px w-10 bg-gradient-to-r from-primary/10 to-primary/50 lg:block" />
-            <div className="h-6 w-px bg-primary/40 lg:hidden" />
+            <div className="h-6 w-px bg-primary/40" />
 
             <Link
               to={`/product-type/${PRODUCT_TYPES[0].id}`}
-              className="w-full max-w-xs shrink-0 rounded-2xl border border-primary/50 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-5 text-center shadow-[0_0_40px_-12px] shadow-primary/40 transition-transform hover:scale-[1.02] lg:w-56"
+              className="group w-full max-w-xs rounded-2xl border border-primary/50 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-5 text-center shadow-[0_0_40px_-12px] shadow-primary/40 transition-transform hover:scale-[1.02]"
             >
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Foundation</span>
               <h3 className="mt-1.5 font-heading text-lg font-semibold text-foreground">{PRODUCT_TYPES[0].label}</h3>
               <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{PRODUCT_TYPES[0].description}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                View product
+                <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
+              </span>
             </Link>
 
-            <div className="hidden h-px w-10 bg-gradient-to-r from-primary/50 to-border lg:block" />
-            <div className="h-6 w-px bg-border lg:hidden" />
+            <div className="h-6 w-px bg-border" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Becomes</span>
+            <div className="h-6 w-px bg-border" />
 
-            <div className="flex w-full max-w-xs flex-col gap-3 lg:w-72">
+            <div className="flex w-full max-w-xs flex-col gap-3">
               {PRODUCT_TYPES.slice(1).map((pt) => (
-                <div key={pt.id} className="flex items-center gap-3">
-                  <div className="hidden h-px w-5 bg-border lg:block" />
-                  <Link
-                    to={`/product-type/${pt.id}`}
-                    className="flex flex-1 items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/40 hover:bg-card/80"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <pt.icon size={18} />
-                    </span>
-                    <span>
-                      <span className="block text-sm font-semibold text-foreground">{pt.label}</span>
-                      <span className="block text-xs text-muted-foreground">{pt.description}</span>
-                    </span>
-                  </Link>
-                </div>
+                <Link
+                  key={pt.id}
+                  to={`/product-type/${pt.id}`}
+                  className="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/40 hover:bg-card/80"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <pt.icon size={18} />
+                  </span>
+                  <span className="flex-1">
+                    <span className="block text-sm font-semibold text-foreground">{pt.label}</span>
+                    <span className="block text-xs text-muted-foreground">{pt.description}</span>
+                  </span>
+                  <ArrowRight
+                    size={14}
+                    className="shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary"
+                  />
+                </Link>
               ))}
             </div>
           </div>
