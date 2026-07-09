@@ -9,7 +9,6 @@ import { useMediaOverrides } from "@/hooks/useMediaOverrides";
 import { cn } from "@/lib/utils";
 import droneBg from "@/assets/drone-bg.jpg";
 import { HERO_VIDEO_URL } from "@/data/media-cdn";
-import { NianticLogo, EsriLogo, SkywatchLogo } from "@/components/PartnerLogos";
 import apiHeroNorth from "@/assets/api-hero-north.jpg";
 import apiHeroEast from "@/assets/api-hero-east.jpg";
 import apiHeroSouth from "@/assets/api-hero-south.jpg";
@@ -213,7 +212,7 @@ const Index = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/40" />
           <div className="relative z-10 px-4 pt-20 pb-16 sm:px-6 sm:pt-24 sm:pb-20">
             <div className="max-w-5xl">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Spexi Imagery Library</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Spexi Image Gallery</p>
               <h1 className="mt-6 font-heading text-5xl font-extrabold leading-[0.95] tracking-tighter text-foreground break-words sm:text-7xl lg:text-8xl">
                 <span className="block">The World,</span>
                 <span className="block bg-gradient-to-br from-primary/90 via-primary to-primary/70 bg-clip-text text-transparent">
@@ -221,8 +220,7 @@ const Index = () => {
                 </span>
               </h1>
               <p className="mt-6 max-w-2xl text-base font-light leading-relaxed text-muted-foreground sm:text-xl">
-                Standardized aerial imagery captured by a verified pilot network. High-fidelity orthomosaics, 360°
-                panoramas, 5-View API responses, and Gaussian splats — ready to drop into any spatial workflow.
+                Explore standardized drone imagery.
               </p>
             </div>
             
@@ -236,27 +234,10 @@ const Index = () => {
           </div>
         </section>
 
-        <section className="relative z-10 mt-12">
-          <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
-            In Collaboration With
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-8 sm:gap-12">
-            <div className="flex h-10 items-center text-muted-foreground transition-colors hover:text-foreground">
-              <NianticLogo className="h-6 w-auto" />
-            </div>
-            <div className="flex h-10 items-center text-muted-foreground transition-colors hover:text-foreground">
-              <EsriLogo className="h-6 w-auto" />
-            </div>
-            <div className="flex h-10 items-center text-muted-foreground transition-colors hover:text-foreground">
-              <SkywatchLogo className="h-6 w-auto" />
-            </div>
-          </div>
-        </section>
-
         <section className="mt-16 grid gap-10 border-t border-border/60 pt-12 md:grid-cols-3 md:gap-12">
-          <WorkflowStep step="01" title="Request imagery" body="Order a capture through the Spexi platform." />
-          <WorkflowStep step="02" title="Captured by pilot network" body="Verified pilots fly to a standardized spec — every time, everywhere." />
-          <WorkflowStep step="03" title="Integrated into your GIS systems" body="Receive orthomosaics, 360° panoramas, 5-View API responses, and Gaussian splats — ready to drop into any spatial workflow." />
+          <WorkflowStep step="01" title="Subscribe to recurring change" />
+          <WorkflowStep step="02" title="Task collections" />
+          <WorkflowStep step="03" title="Build world models" />
         </section>
 
         <section className="mt-16 border-t border-border/60 pt-12">
@@ -460,14 +441,11 @@ function MiniApiCross() {
   );
 }
 
-function WorkflowStep({ step, title, body }: { step: string; title: string; body: string }) {
+function WorkflowStep({ step, title }: { step: string; title: string }) {
   return (
     <div className="flex gap-5">
       <span className="text-3xl font-extrabold text-primary/40">{step}</span>
-      <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">{title}</h3>
-        <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
-      </div>
+      <h3 className="text-base font-semibold text-foreground">{title}</h3>
     </div>
   );
 }
