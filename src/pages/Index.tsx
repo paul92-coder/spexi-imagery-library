@@ -9,14 +9,6 @@ import { useMediaOverrides } from "@/hooks/useMediaOverrides";
 import { cn } from "@/lib/utils";
 import droneBg from "@/assets/drone-bg.jpg";
 import { HERO_VIDEO_URL } from "@/data/media-cdn";
-import apiHeroNorth from "@/assets/api-hero-north.jpg";
-import apiHeroEast from "@/assets/api-hero-east.jpg";
-import apiHeroSouth from "@/assets/api-hero-south.jpg";
-import apiHeroWest from "@/assets/api-hero-west.jpg";
-import apiHeroAbove from "@/assets/api-hero-above.jpg";
-import productCardSplat from "@/assets/product-card-splat.jpg";
-import productCardOrtho from "@/assets/product-card-ortho.jpg";
-import productCardPanorama from "@/assets/product-card-panorama.jpg";
 
 const INDUSTRIES = [
   "All",
@@ -29,28 +21,15 @@ const INDUSTRIES = [
 ] as const;
 type Industry = (typeof INDUSTRIES)[number];
 
-// Set once a same-location image set (one upload per product type, all
-// sharing this title) exists — see `imageType` per product below. Left
-// blank, the cards fall back to the plain icon-only design.
-const PRODUCT_CARD_LOCATION_TITLE = "";
-
+// Static Images is the foundation every flight produces; the other three
+// are downstream products generated from that same capture (see the "One
+// flight, creates multiple data products" funnel section below).
 const PRODUCT_TYPES = [
-  { id: "ortho" as const, label: "Orthomosaics", description: "Site-specific geo-referenced maps", icon: MapIcon, imageType: "orthomosaic" as const },
-  { id: "panorama" as const, label: "360° Panoramas", description: "Immersive aerial perspectives", icon: Globe2, imageType: "oblique" as const },
-  { id: "splat" as const, label: "Gaussian Splats", description: "Photoreal 3D digital twins", icon: Box, imageType: "splat" as const },
-  { id: "api" as const, label: "Static Images", description: "Filtered static images from multiple angles", icon: Compass, imageType: "api" as const },
+  { id: "api" as const, label: "Static Images", description: "Filtered static images from multiple angles and orientations.", icon: Compass, imageType: "api" as const },
+  { id: "ortho" as const, label: "Orthomosaics", description: "Site-specific geo-referenced maps.", icon: MapIcon, imageType: "orthomosaic" as const },
+  { id: "panorama" as const, label: "360° Panoramas", description: "Immersive aerial perspectives.", icon: Globe2, imageType: "oblique" as const },
+  { id: "splat" as const, label: "Gaussian Splats", description: "Realistic, measurable world models.", icon: Box, imageType: "splat" as const },
 ];
-
-// Manually-set hero images for a product card, taking priority over the
-// PRODUCT_CARD_LOCATION_TITLE lookup above (e.g. one-off photos supplied
-// directly rather than uploaded through the admin panel).
-const STATIC_PRODUCT_HERO: Partial<Record<(typeof PRODUCT_TYPES)[number]["id"], string>> = {
-  splat: productCardSplat,
-  ortho: productCardOrtho,
-  panorama: productCardPanorama,
-};
-
-const HEXAGON_CLIP_PATH = "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)";
 
 const BEFORE_AFTER_GROUP = "before-after";
 
@@ -123,20 +102,6 @@ const Index = () => {
     });
     return out;
   }, [industry, allUseCases]);
-
-  // Looks up the shared-location image set for the "Browse by Product"
-  // cards, keyed by each product's imageType. Empty until
-  // PRODUCT_CARD_LOCATION_TITLE is set.
-  const productCardImages = useMemo(() => {
-    const map: Partial<Record<string, MediaItem>> = {};
-    if (!PRODUCT_CARD_LOCATION_TITLE) return map;
-    allUseCases.forEach((uc) =>
-      uc.items.forEach((item) => {
-        if (item.title === PRODUCT_CARD_LOCATION_TITLE && item.imageType) map[item.imageType] = item;
-      }),
-    );
-    return map;
-  }, [allUseCases]);
 
   // Before/after comparisons get their own cross-use-case group, mirroring
   // how the original site surfaces them as a single "Before & After" shelf
@@ -240,56 +205,55 @@ const Index = () => {
 
         <section className="mt-16 border-t border-border/60 pt-12">
           <h2 className="text-center font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Browse by Product
+            One flight, creates multiple data products
           </h2>
-          <p className="mt-2 text-center text-sm text-muted-foreground">Explore imagery by type</p>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {PRODUCT_TYPES.map((pt) => {
-              const heroItem = productCardImages[pt.imageType];
-              return (
-                <Link
-                  key={pt.id}
-                  to={`/product-type/${pt.id}`}
-                  className="group relative block overflow-hidden rounded-xl bg-card ring-1 ring-border transition-all hover:-translate-y-1 hover:ring-foreground/30"
-                >
-                  {pt.id === "api" ? (
-                    <MiniApiCross />
-                  ) : pt.id === "ortho" && STATIC_PRODUCT_HERO.ortho ? (
-                    <div className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted">
-                      <div className="aspect-square h-[85%]">
-                        <img
-                          src={STATIC_PRODUCT_HERO.ortho}
-                          alt={pt.label}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          style={{ clipPath: HEXAGON_CLIP_PATH }}
-                        />
-                      </div>
-                    </div>
-                  ) : STATIC_PRODUCT_HERO[pt.id] ? (
-                    <div className="aspect-[4/3] overflow-hidden">
-                      <img
-                        src={STATIC_PRODUCT_HERO[pt.id]}
-                        alt={pt.label}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-                  ) : (
-                    heroItem && (
-                      <div className="aspect-[4/3] overflow-hidden">
-                        <Thumbnail item={heroItem} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                      </div>
-                    )
-                  )}
-                  <div className="p-6">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
-                      <pt.icon size={24} />
-                    </div>
-                    <h3 className="mt-4 font-heading text-lg font-semibold text-foreground">{pt.label}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{pt.description}</p>
-                  </div>
-                </Link>
-              );
-            })}
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            Every capture starts as static images — and becomes orthomosaics, panoramas, and splats.
+          </p>
+
+          <div className="mt-10 flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:justify-center lg:gap-0">
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary">
+                <DroneIcon size={28} strokeWidth={1.25} />
+              </div>
+              <span className="text-xs font-semibold text-foreground">One flight</span>
+              <span className="max-w-[8rem] text-center text-[11px] text-muted-foreground">Single autonomous capture</span>
+            </div>
+
+            <div className="hidden h-px w-10 bg-gradient-to-r from-primary/10 to-primary/50 lg:block" />
+            <div className="h-6 w-px bg-primary/40 lg:hidden" />
+
+            <Link
+              to={`/product-type/${PRODUCT_TYPES[0].id}`}
+              className="w-full max-w-xs shrink-0 rounded-2xl border border-primary/50 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-5 text-center shadow-[0_0_40px_-12px] shadow-primary/40 transition-transform hover:scale-[1.02] lg:w-56"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Foundation</span>
+              <h3 className="mt-1.5 font-heading text-lg font-semibold text-foreground">{PRODUCT_TYPES[0].label}</h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{PRODUCT_TYPES[0].description}</p>
+            </Link>
+
+            <div className="hidden h-px w-10 bg-gradient-to-r from-primary/50 to-border lg:block" />
+            <div className="h-6 w-px bg-border lg:hidden" />
+
+            <div className="flex w-full max-w-xs flex-col gap-3 lg:w-72">
+              {PRODUCT_TYPES.slice(1).map((pt) => (
+                <div key={pt.id} className="flex items-center gap-3">
+                  <div className="hidden h-px w-5 bg-border lg:block" />
+                  <Link
+                    to={`/product-type/${pt.id}`}
+                    className="flex flex-1 items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/40 hover:bg-card/80"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <pt.icon size={18} />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-semibold text-foreground">{pt.label}</span>
+                      <span className="block text-xs text-muted-foreground">{pt.description}</span>
+                    </span>
+                  </Link>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -418,26 +382,6 @@ const Index = () => {
 };
 
 export default Index;
-
-// A small N/E/S/W/Above cross used as the "5-View API" product card's hero
-// image, using one real captured location instead of a single flat photo.
-function MiniApiCross() {
-  return (
-    <div className="aspect-[4/3] overflow-hidden bg-muted p-2">
-      <div className="grid h-full grid-cols-3 grid-rows-3 gap-1">
-        <div />
-        <img src={apiHeroNorth} alt="North" className="h-full w-full rounded object-cover" />
-        <div />
-        <img src={apiHeroWest} alt="West" className="h-full w-full rounded object-cover" />
-        <img src={apiHeroAbove} alt="Above" className="h-full w-full rounded object-cover ring-1 ring-primary/40" />
-        <img src={apiHeroEast} alt="East" className="h-full w-full rounded object-cover" />
-        <div />
-        <img src={apiHeroSouth} alt="South" className="h-full w-full rounded object-cover" />
-        <div />
-      </div>
-    </div>
-  );
-}
 
 function WorkflowStep({ step, title, icon }: { step: string; title: string; icon: React.ReactNode }) {
   return (
