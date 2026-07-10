@@ -56,16 +56,17 @@ const OverridesContext = createContext<OverridesContextValue | null>(null);
 const DIRECTION_ORDER = ["north", "east", "south", "west", "above"];
 const getDirection = (item: MediaItem) => item.tags?.find((t) => DIRECTION_ORDER.includes(t));
 
-// 5-View API captures are uploaded as separate same-titled rows, one per
-// direction. Bundle any that share a title into a single image_carousel
-// item so they're browsed together (N/E/S/W/Above) wherever this folder's
-// items are displayed — not just on the dedicated 5-View API product page —
+// 5-View API captures and multi-pass orthomosaics are both uploaded as
+// separate same-titled rows (one per direction, or one per capture/date).
+// Bundle any that share a title into a single image_carousel item so
+// they're browsed together as a main image + filmstrip wherever this
+// folder's items are displayed — not just on the dedicated product pages —
 // even standalone items with no siblings are left as plain images.
-function groupApiViews(items: MediaItem[]): MediaItem[] {
+function groupSameTitleItems(items: MediaItem[]): MediaItem[] {
   const groups = new Map<string, MediaItem[]>();
   const passthrough: MediaItem[] = [];
   for (const item of items) {
-    if (item.imageType === "api" && item.title) {
+    if ((item.imageType === "api" || item.imageType === "orthomosaic") && item.title) {
       if (!groups.has(item.title)) groups.set(item.title, []);
       groups.get(item.title)!.push(item);
     } else {
@@ -78,6 +79,9 @@ function groupApiViews(items: MediaItem[]): MediaItem[] {
       grouped.push(group[0]);
       continue;
     }
+    // Direction tags (north/east/south/west/above) order 5-View sets;
+    // items without one (e.g. multiple orthomosaic passes of one site)
+    // keep their original relative order via the stable sort.
     const sorted = [...group].sort((a, b) => {
       const ai = DIRECTION_ORDER.indexOf(getDirection(a) ?? "");
       const bi = DIRECTION_ORDER.indexOf(getDirection(b) ?? "");
@@ -86,7 +90,7 @@ function groupApiViews(items: MediaItem[]): MediaItem[] {
     const cover = sorted.find((it) => getDirection(it) === "above") ?? sorted[0];
     grouped.push({
       ...cover,
-      id: `api-group-${cover.title.toLowerCase().replace(/\s+/g, "-")}`,
+      id: `group-${cover.title.toLowerCase().replace(/\s+/g, "-")}`,
       type: "image_carousel",
       images: sorted.map((it) => {
         const dir = getDirection(it);
@@ -276,7 +280,7 @@ export const MediaOverridesProvider = ({ children }: { children: ReactNode }) =>
       // A folder can be hidden either in code (permanent, e.g. Uploads) or
       // live via the Admin panel's Folders toggle — either one hides it.
       hideFromHome: uc.hideFromHome || !!folderSettings[uc.id]?.hidden,
-      items: groupApiViews(groupBeforeAfterPairs([
+      items: groupSameTitleItems(groupBeforeAfterPairs([
         ...uc.items.map((it) => applyOverride(it, overrides[it.id])),
         ...(byUseCase[uc.id] ?? []),
       ])),
