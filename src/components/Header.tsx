@@ -53,7 +53,7 @@ const Header = () => {
             Use Cases
           </Link>
           <a
-            href="https://spexi.com"
+            href="https://www.spexi.com/book-a-demo"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-transform hover:scale-105"
